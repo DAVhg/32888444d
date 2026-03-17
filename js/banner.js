@@ -209,20 +209,6 @@
       ctx.restore();
     }
 
-    // === Border ===
-    ctx.strokeStyle = accent;
-    ctx.lineWidth = 0.5;
-    ctx.globalAlpha = 0.1;
-    ctx.strokeRect(14, 14, realW - 28, realH - 28);
-    ctx.globalAlpha = 0.15;
-    ctx.font = '22px serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = accent;
-    ctx.fillText('✦', 14, 14);
-    ctx.fillText('✦', realW - 14, 14);
-    ctx.fillText('✦', 14, realH - 14);
-    ctx.fillText('✦', realW - 14, realH - 14);
     ctx.globalAlpha = 1;
 
     // === Cursor ===
