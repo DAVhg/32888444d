@@ -806,7 +806,34 @@
       });
     }
 
+    function playShutter() {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      // Click 1 - mechanical shutter open
+      const buf1 = ac.createBuffer(1, ac.sampleRate * 0.08, ac.sampleRate);
+      const ch1 = buf1.getChannelData(0);
+      for (let i = 0; i < ch1.length; i++) {
+        const t = i / ch1.length;
+        ch1[i] = (Math.random() * 2 - 1) * Math.exp(-t * 40) * 0.6;
+      }
+      // Click 2 - shutter close (slightly delayed)
+      const buf2 = ac.createBuffer(1, ac.sampleRate * 0.06, ac.sampleRate);
+      const ch2 = buf2.getChannelData(0);
+      for (let i = 0; i < ch2.length; i++) {
+        const t = i / ch2.length;
+        ch2[i] = (Math.random() * 2 - 1) * Math.exp(-t * 50) * 0.4;
+      }
+      const s1 = ac.createBufferSource(); s1.buffer = buf1;
+      const g1 = ac.createGain(); g1.gain.value = 0.8;
+      s1.connect(g1); g1.connect(ac.destination); s1.start(ac.currentTime);
+      const s2 = ac.createBufferSource(); s2.buffer = buf2;
+      const g2 = ac.createGain(); g2.gain.value = 0.6;
+      s2.connect(g2); g2.connect(ac.destination); s2.start(ac.currentTime + 0.06);
+      // Cleanup
+      setTimeout(() => ac.close(), 300);
+    }
+
     function takePhoto() {
+      playShutter();
       flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active');
       const cc = document.createElement('canvas');
       const vw = video.videoWidth || 640, vh = video.videoHeight || 480;

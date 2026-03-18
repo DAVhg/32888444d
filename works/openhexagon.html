@@ -179,61 +179,235 @@ let nextDiffScore = 20;
 let rotFlipTimer = 0;
 let nextRotFlip = 400;
 
-// Audio
+// ===== AUDIO ENGINE =====
+// Procedural electronic soundtrack inspired by Super Hexagon / Open Hexagon
+// Uses Web Audio API - works on mobile when started from user gesture
+
 let audioCtx;
+let masterGain;
+let musicPlaying = false;
+let musicScheduler = null;
+let nextBeatTime = 0;
+let currentBeat = 0;
+const BPM = 150;
+const BEAT_LEN = 60 / BPM;
+const SCHEDULE_AHEAD = 0.15;
+
 function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.6;
+    masterGain.connect(audioCtx.destination);
+  }
+  // iOS requires resume on user gesture
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-function snd(type) {
-  if (!audioCtx) return;
-  const o = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  o.connect(g);
-  g.connect(audioCtx.destination);
-  const t = audioCtx.currentTime;
-  if (type === 'die') {
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(300, t);
-    o.frequency.exponentialRampToValueAtTime(40, t + 0.5);
-    g.gain.setValueAtTime(0.15, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-    o.start(t); o.stop(t + 0.5);
-  } else if (type === 'pulse') {
-    o.type = 'sine';
-    o.frequency.setValueAtTime(220, t);
-    o.frequency.setValueAtTime(330, t + 0.05);
-    g.gain.setValueAtTime(0.05, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-    o.start(t); o.stop(t + 0.08);
-  } else if (type === 'start') {
-    o.type = 'square';
-    o.frequency.setValueAtTime(440, t);
-    o.frequency.setValueAtTime(660, t + 0.08);
-    o.frequency.setValueAtTime(880, t + 0.16);
-    g.gain.setValueAtTime(0.1, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    o.start(t); o.stop(t + 0.3);
-  } else if (type === 'levelup') {
-    o.type = 'sine';
-    o.frequency.setValueAtTime(523, t);
-    o.frequency.setValueAtTime(659, t + 0.1);
-    o.frequency.setValueAtTime(784, t + 0.2);
-    g.gain.setValueAtTime(0.1, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-    o.start(t); o.stop(t + 0.4);
+// --- Synth helpers ---
+function playNote(freq, startTime, duration, type, vol, dest) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, startTime);
+  gain.gain.setValueAtTime(vol, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.connect(gain);
+  gain.connect(dest || masterGain);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.05);
+}
+
+function playKick(time) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(150, time);
+  osc.frequency.exponentialRampToValueAtTime(30, time + 0.12);
+  gain.gain.setValueAtTime(0.35, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(time);
+  osc.stop(time + 0.2);
+}
+
+function playHihat(time, open) {
+  // Noise-like hihat using high-freq oscillators
+  const dur = open ? 0.12 : 0.04;
+  const vol = open ? 0.06 : 0.04;
+  for (let i = 0; i < 3; i++) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(3000 + i * 1500 + Math.random() * 500, time);
+    gain.gain.setValueAtTime(vol, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(time);
+    osc.stop(time + dur + 0.01);
   }
 }
 
-let beatInterval = null;
-function startBeat() {
-  stopBeat();
-  beatInterval = setInterval(() => {
-    if (state === 'playing') snd('pulse');
-  }, 500);
+function playSnare(time) {
+  // Pitched body
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(200, time);
+  osc.frequency.exponentialRampToValueAtTime(80, time + 0.08);
+  gain.gain.setValueAtTime(0.15, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(time);
+  osc.stop(time + 0.15);
+  // Noise part
+  for (let i = 0; i < 4; i++) {
+    const n = audioCtx.createOscillator();
+    const ng = audioCtx.createGain();
+    n.type = 'square';
+    n.frequency.setValueAtTime(1000 + i * 800 + Math.random() * 400, time);
+    ng.gain.setValueAtTime(0.07, time);
+    ng.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+    n.connect(ng);
+    ng.connect(masterGain);
+    n.start(time);
+    n.stop(time + 0.1);
+  }
 }
-function stopBeat() {
-  if (beatInterval) { clearInterval(beatInterval); beatInterval = null; }
+
+// --- Music patterns ---
+// Bass notes (minor key, root = E2)
+const BASS_PATTERNS = [
+  [82.41, 82.41, 110, 110, 98, 98, 82.41, 82.41],  // Em pattern
+  [82.41, 82.41, 73.42, 73.42, 82.41, 98, 110, 82.41],
+  [110, 110, 98, 98, 82.41, 82.41, 73.42, 82.41],
+];
+
+// Arp notes (Em pentatonic: E G A B D)
+const ARP_NOTES = [329.63, 392, 440, 493.88, 587.33, 659.25, 783.99, 880];
+
+// Lead melody fragments
+const LEAD_PATTERNS = [
+  [659.25, 0, 587.33, 0, 493.88, 0, 440, 0, 392, 0, 440, 0, 493.88, 0, 587.33, 0],
+  [880, 0, 783.99, 0, 659.25, 0, 587.33, 0, 493.88, 0, 587.33, 659.25, 0, 783.99, 0, 880],
+  [493.88, 587.33, 659.25, 0, 587.33, 493.88, 0, 440, 392, 0, 440, 493.88, 0, 587.33, 0, 0],
+];
+
+function scheduleBeat(beatNum, time) {
+  const halfBeat = BEAT_LEN / 2;
+  const sixteenth = BEAT_LEN / 4;
+  const bar = beatNum % 8;
+  const phrase = Math.floor(beatNum / 32) % BASS_PATTERNS.length;
+
+  // --- KICK: every beat, extra on some eighth notes ---
+  playKick(time);
+  if (bar === 3 || bar === 7) {
+    playKick(time + halfBeat);
+  }
+
+  // --- HIHAT: every eighth note ---
+  playHihat(time, false);
+  playHihat(time + halfBeat, bar % 2 === 1);
+
+  // --- SNARE: beats 2 and 6 (backbeat) ---
+  if (bar === 2 || bar === 6) {
+    playSnare(time);
+  }
+  // Fill on bar 7
+  if (bar === 7) {
+    playSnare(time + halfBeat);
+    playHihat(time + halfBeat + sixteenth, false);
+  }
+
+  // --- BASS: driving eighth notes ---
+  const bassPattern = BASS_PATTERNS[phrase];
+  const bassNote = bassPattern[bar];
+  playNote(bassNote, time, BEAT_LEN * 0.4, 'sawtooth', 0.12, masterGain);
+  playNote(bassNote, time + halfBeat, BEAT_LEN * 0.3, 'sawtooth', 0.08, masterGain);
+
+  // --- ARPEGGIOS: fast sixteenth notes ---
+  const arpBase = Math.floor(beatNum / 4) % ARP_NOTES.length;
+  for (let i = 0; i < 4; i++) {
+    const arpIdx = (arpBase + i) % ARP_NOTES.length;
+    const arpFreq = ARP_NOTES[arpIdx];
+    // Vary volume for rhythmic feel
+    const arpVol = (i === 0 || i === 2) ? 0.05 : 0.03;
+    playNote(arpFreq, time + i * sixteenth, sixteenth * 0.7, 'square', arpVol, masterGain);
+  }
+
+  // --- LEAD: every other bar, sparse melody ---
+  if (beatNum % 2 === 0) {
+    const leadPat = LEAD_PATTERNS[Math.floor(beatNum / 16) % LEAD_PATTERNS.length];
+    const leadIdx = beatNum % leadPat.length;
+    const leadFreq = leadPat[leadIdx];
+    if (leadFreq > 0) {
+      playNote(leadFreq, time, BEAT_LEN * 0.6, 'sine', 0.06, masterGain);
+    }
+  }
+
+  // --- Tempo/intensity ramp with difficulty ---
+  // Subtle pitch bend on bass for tension
+  if (difficultyLevel >= 2 && bar === 0) {
+    playNote(bassNote * 2, time, BEAT_LEN * 0.2, 'square', 0.04, masterGain);
+  }
+}
+
+function startMusic() {
+  if (!audioCtx || musicPlaying) return;
+  musicPlaying = true;
+  currentBeat = 0;
+  nextBeatTime = audioCtx.currentTime + 0.05;
+
+  function scheduler() {
+    while (nextBeatTime < audioCtx.currentTime + SCHEDULE_AHEAD) {
+      scheduleBeat(currentBeat, nextBeatTime);
+      nextBeatTime += BEAT_LEN;
+      currentBeat++;
+    }
+    if (musicPlaying) {
+      musicScheduler = setTimeout(scheduler, 25);
+    }
+  }
+  scheduler();
+}
+
+function stopMusic() {
+  musicPlaying = false;
+  if (musicScheduler) {
+    clearTimeout(musicScheduler);
+    musicScheduler = null;
+  }
+}
+
+// --- SFX (separate from music) ---
+function snd(type) {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  if (type === 'die') {
+    // Dramatic descending noise
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(400, t);
+    o.frequency.exponentialRampToValueAtTime(30, t + 0.6);
+    g.gain.setValueAtTime(0.2, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t + 0.7);
+  } else if (type === 'start') {
+    // Rising sweep
+    playNote(440, t, 0.08, 'square', 0.08, masterGain);
+    playNote(660, t + 0.08, 0.08, 'square', 0.08, masterGain);
+    playNote(880, t + 0.16, 0.12, 'square', 0.1, masterGain);
+  } else if (type === 'levelup') {
+    playNote(523, t, 0.1, 'sine', 0.1, masterGain);
+    playNote(659, t + 0.1, 0.1, 'sine', 0.1, masterGain);
+    playNote(784, t + 0.2, 0.15, 'sine', 0.12, masterGain);
+    playNote(1047, t + 0.3, 0.2, 'sine', 0.08, masterGain);
+  }
 }
 
 // ===== INPUT =====
@@ -308,7 +482,7 @@ function startGame() {
   flashAlpha = 0;
   shakeX = 0; shakeY = 0;
   snd('start');
-  startBeat();
+  startMusic();
   // Spawn initial patterns with good spacing
   spawnPattern(getSpawnDist());
 }
@@ -376,7 +550,7 @@ function update(dt) {
     if (deathTimer > 30) {
       state = 'dead';
       deathTimer = 0;
-      stopBeat();
+      stopMusic();
     }
     return;
   }
