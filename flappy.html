@@ -131,11 +131,28 @@ let flashAlpha = 0;
 
 // ===== AUDIO =====
 let audioCtx;
+let audioUnlocked = false;
 function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  // Resume suspended context (required on iOS/mobile after user gesture)
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  // Unlock iOS audio by playing a silent buffer on first touch
+  if (!audioUnlocked) {
+    audioUnlocked = true;
+    const buf = audioCtx.createBuffer(1, 1, 22050);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start(0);
+  }
 }
 function snd(type) {
-  if (!audioCtx) return;
+  if (!audioCtx || audioCtx.state === 'suspended') return;
+  try {
   const o = audioCtx.createOscillator();
   const g = audioCtx.createGain();
   o.connect(g); g.connect(audioCtx.destination);
@@ -166,6 +183,7 @@ function snd(type) {
     g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
     o.start(t); o.stop(t + 0.1);
   }
+  } catch(e) {} // Silently ignore audio errors on restrictive browsers
 }
 
 // ===== INPUT =====
