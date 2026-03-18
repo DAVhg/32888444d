@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Open Hexagon — 32888444d</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #080808;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+    }
+    #back-link {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      z-index: 100;
+      font-family: 'Courier New', monospace;
+      background: rgba(0,0,0,0.5);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+    #back-link:hover { color: #fff; }
+  </style>
+</head>
+<body>
+  <a id="back-link" href="../index.html">&larr; Back</a>
+  <canvas id="c"></canvas>
+
+<script>
+// ============================================================
+// OPEN HEXAGON — HTML5 Canvas Clone (Fixed)
+// ============================================================
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+// Hi-DPI support
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+resize();
+window.addEventListener('resize', resize);
+
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+const CX = () => W() / 2;
+const CY = () => H() / 2;
+
+// ===== CONFIG =====
+const SIDES = 6;
+const PLAYER_DIST = 70;
+const PLAYER_SIZE = 7;
+const WALL_THICKNESS = 14;
+const WALL_SPEED_BASE = 2.8;
+const ROTATION_SPEED_BASE = 0.008;
+const PLAYER_SPEED = 0.06;
+const CENTER_RADIUS = 24;
+const TWO_PI = Math.PI * 2;
+const SIDE_ANGLE = TWO_PI / SIDES;
+
+// Minimum gap between consecutive wall layers (in pixels of radial distance)
+const MIN_PATTERN_GAP = 70;
+
+// ===== COLOR THEMES =====
+const THEMES = [
+  { bg1: '#1a0a2e', bg2: '#0a0a1a', wall: '#ff3800', center: '#ff3800', player: '#ffffff', accent: '#ff6030' },
+  { bg1: '#0a1a2e', bg2: '#050d1a', wall: '#00b894', center: '#00b894', player: '#ffffff', accent: '#55efc4' },
+  { bg1: '#2e0a1a', bg2: '#1a050d', wall: '#e84393', center: '#e84393', player: '#ffffff', accent: '#fd79a8' },
+  { bg1: '#1a1a0a', bg2: '#0d0d05', wall: '#fdcb6e', center: '#fdcb6e', player: '#ffffff', accent: '#ffeaa7' },
+  { bg1: '#0a2e1a', bg2: '#051a0d', wall: '#6c5ce7', center: '#6c5ce7', player: '#ffffff', accent: '#a29bfe' },
+  { bg1: '#2e1a0a', bg2: '#1a0d05', wall: '#e17055', center: '#e17055', player: '#ffffff', accent: '#fab1a0' },
+];
+
+// ===== PATTERN GENERATORS =====
+// Each returns an array of layers: [ { sides: [bool x SIDES], thickness: num }, ... ]
+// A layer is one ring of walls. Patterns can have multiple layers with built-in spacing.
+function patSingleGap(opening) {
+  const sides = Array(SIDES).fill(true);
+  sides[opening % SIDES] = false;
+  return [{ sides, thickness: WALL_THICKNESS }];
+}
+
+function patAlternating(opening) {
+  const sides = Array(SIDES).fill(false);
+  const offset = opening % 2;
+  for (let i = 0; i < SIDES; i++) if (i % 2 === offset) sides[i] = true;
+  return [{ sides, thickness: WALL_THICKNESS }];
+}
+
+function patTunnel(opening) {
+  const o = opening % SIDES;
+  const sides = Array(SIDES).fill(true);
+  sides[o] = false;
+  sides[(o + 3) % SIDES] = false;
+  return [{ sides, thickness: WALL_THICKNESS }];
+}
+
+function patSpiral2(opening) {
+  // Two layers, gap shifts by 1 side
+  const o1 = opening % SIDES;
+  const o2 = (opening + 1) % SIDES;
+  const s1 = Array(SIDES).fill(true); s1[o1] = false;
+  const s2 = Array(SIDES).fill(true); s2[o2] = false;
+  return [
+    { sides: s1, thickness: WALL_THICKNESS },
+    { sides: s2, thickness: WALL_THICKNESS }
+  ];
+}
+
+function patSpiral3(opening) {
+  // Three layers, gap shifts by 1 each time
+  const layers = [];
+  for (let j = 0; j < 3; j++) {
+    const o = (opening + j) % SIDES;
+    const s = Array(SIDES).fill(true); s[o] = false;
+    layers.push({ sides: s, thickness: WALL_THICKNESS });
+  }
+  return layers;
+}
+
+function patDoubleGap(opening) {
+  // Two adjacent sides open
+  const sides = Array(SIDES).fill(true);
+  sides[opening % SIDES] = false;
+  sides[(opening + 1) % SIDES] = false;
+  return [{ sides, thickness: WALL_THICKNESS * 1.5 }];
+}
+
+const PATTERNS_EASY = [patSingleGap, patAlternating, patTunnel, patDoubleGap];
+const PATTERNS_MED  = [patSingleGap, patAlternating, patTunnel, patSpiral2];
+const PATTERNS_HARD = [patSingleGap, patSpiral2, patSpiral3, patAlternating, patTunnel];
+
+// ===== GAME STATE =====
+let state = 'menu';
+let playerAngle = 0;
+let walls = [];           // { side: int, dist: float, thickness: float }
+let worldRotation = 0;
+let rotationDir = 1;
+let rotationSpeed = ROTATION_SPEED_BASE;
+let wallSpeed = WALL_SPEED_BASE;
+let score = 0;
+let scoreTimer = 0;
+let bestScore = parseInt(localStorage.getItem('hexagon_best') || '0');
+let themeIndex = 0;
+let theme = THEMES[0];
+let nextThemeScore = 10;
+let deathTimer = 0;
+let pulsePhase = 0;
+let input = { left: false, right: false };
+let lastTime = 0;
+let shakeX = 0, shakeY = 0;
+let flashAlpha = 0;
+let difficultyLevel = 0;
+let nextDiffScore = 20;
+let rotFlipTimer = 0;
+let nextRotFlip = 400;
+
+// Audio
+let audioCtx;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function snd(type) {
+  if (!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  const t = audioCtx.currentTime;
+  if (type === 'die') {
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(300, t);
+    o.frequency.exponentialRampToValueAtTime(40, t + 0.5);
+    g.gain.setValueAtTime(0.15, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    o.start(t); o.stop(t + 0.5);
+  } else if (type === 'pulse') {
+    o.type = 'sine';
+    o.frequency.setValueAtTime(220, t);
+    o.frequency.setValueAtTime(330, t + 0.05);
+    g.gain.setValueAtTime(0.05, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+    o.start(t); o.stop(t + 0.08);
+  } else if (type === 'start') {
+    o.type = 'square';
+    o.frequency.setValueAtTime(440, t);
+    o.frequency.setValueAtTime(660, t + 0.08);
+    o.frequency.setValueAtTime(880, t + 0.16);
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+    o.start(t); o.stop(t + 0.3);
+  } else if (type === 'levelup') {
+    o.type = 'sine';
+    o.frequency.setValueAtTime(523, t);
+    o.frequency.setValueAtTime(659, t + 0.1);
+    o.frequency.setValueAtTime(784, t + 0.2);
+    g.gain.setValueAtTime(0.1, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+    o.start(t); o.stop(t + 0.4);
+  }
+}
+
+let beatInterval = null;
+function startBeat() {
+  stopBeat();
+  beatInterval = setInterval(() => {
+    if (state === 'playing') snd('pulse');
+  }, 500);
+}
+function stopBeat() {
+  if (beatInterval) { clearInterval(beatInterval); beatInterval = null; }
+}
+
+// ===== INPUT =====
+// Touch: left half = rotate left, right half = rotate right
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  for (const touch of e.changedTouches) {
+    if (touch.clientX < W() / 2) input.left = true;
+    else input.right = true;
+  }
+  handleTap();
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+  e.preventDefault();
+  // Check remaining touches
+  const hasLeft = Array.from(e.touches).some(t => t.clientX < W() / 2);
+  const hasRight = Array.from(e.touches).some(t => t.clientX >= W() / 2);
+  input.left = hasLeft;
+  input.right = hasRight;
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', (e) => {
+  input.left = false;
+  input.right = false;
+});
+
+// Mouse
+canvas.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  if (e.clientX < W() / 2) input.left = true;
+  else input.right = true;
+  handleTap();
+});
+canvas.addEventListener('mouseup', () => { input.left = false; input.right = false; });
+canvas.addEventListener('mouseleave', () => { input.left = false; input.right = false; });
+
+// Keyboard
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') input.left = true;
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') input.right = true;
+  if (e.code === 'Space' || e.code === 'Enter') handleTap();
+});
+document.addEventListener('keyup', (e) => {
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') input.left = false;
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') input.right = false;
+});
+
+function handleTap() {
+  initAudio();
+  if (state === 'menu') startGame();
+  else if (state === 'dead' && deathTimer > 40) startGame();
+}
+
+function startGame() {
+  state = 'playing';
+  playerAngle = Math.PI * 1.5; // start at top
+  walls = [];
+  worldRotation = 0;
+  rotationDir = 1;
+  rotationSpeed = ROTATION_SPEED_BASE;
+  wallSpeed = WALL_SPEED_BASE;
+  score = 0;
+  scoreTimer = 0;
+  themeIndex = 0;
+  theme = THEMES[0];
+  nextThemeScore = 10;
+  difficultyLevel = 0;
+  nextDiffScore = 20;
+  rotFlipTimer = 0;
+  nextRotFlip = 400;
+  flashAlpha = 0;
+  shakeX = 0; shakeY = 0;
+  snd('start');
+  startBeat();
+  // Spawn initial patterns with good spacing
+  spawnPattern(getSpawnDist());
+}
+
+function getSpawnDist() {
+  return Math.max(W(), H()) * 0.7 + 200;
+}
+
+// ===== WALL SPAWNING =====
+function spawnPattern(baseDist) {
+  const pool = difficultyLevel < 1 ? PATTERNS_EASY
+             : difficultyLevel < 3 ? PATTERNS_MED
+             : PATTERNS_HARD;
+
+  const patternFn = pool[Math.floor(Math.random() * pool.length)];
+  const opening = Math.floor(Math.random() * SIDES);
+  const layers = patternFn(opening);
+
+  let dist = baseDist;
+  for (const layer of layers) {
+    for (let i = 0; i < SIDES; i++) {
+      if (layer.sides[i]) {
+        walls.push({ side: i, dist: dist, thickness: layer.thickness });
+      }
+    }
+    dist += layer.thickness + MIN_PATTERN_GAP;
+  }
+
+  return dist; // return the end distance for chaining
+}
+
+// ===== NORMALIZE ANGLE to [0, TWO_PI) =====
+function normAngle(a) {
+  a = a % TWO_PI;
+  if (a < 0) a += TWO_PI;
+  return a;
+}
+
+// ===== Check if angle is within arc [start, end) =====
+function angleInArc(angle, start, end) {
+  angle = normAngle(angle);
+  start = normAngle(start);
+  end = normAngle(end);
+  if (start < end) {
+    return angle >= start && angle < end;
+  } else {
+    // wraps around 0
+    return angle >= start || angle < end;
+  }
+}
+
+// ===== UPDATE =====
+function update(dt) {
+  if (state === 'menu') {
+    worldRotation += 0.004 * dt;
+    pulsePhase += 0.03 * dt;
+    return;
+  }
+
+  if (state === 'dying') {
+    deathTimer += dt;
+    flashAlpha = Math.max(0, 1 - deathTimer / 15);
+    shakeX = (Math.random() - 0.5) * Math.max(0, 12 - deathTimer * 0.4);
+    shakeY = (Math.random() - 0.5) * Math.max(0, 12 - deathTimer * 0.4);
+    if (deathTimer > 30) {
+      state = 'dead';
+      deathTimer = 0;
+      stopBeat();
+    }
+    return;
+  }
+
+  if (state === 'dead') {
+    deathTimer += dt;
+    pulsePhase += 0.03 * dt;
+    return;
+  }
+
+  // === Playing ===
+
+  // Player movement
+  if (input.left) playerAngle -= PLAYER_SPEED * dt;
+  if (input.right) playerAngle += PLAYER_SPEED * dt;
+  playerAngle = normAngle(playerAngle);
+
+  // World rotation with direction flips
+  rotFlipTimer += dt;
+  if (rotFlipTimer > nextRotFlip) {
+    rotFlipTimer = 0;
+    rotationDir *= -1;
+    nextRotFlip = 300 + Math.random() * 400;
+  }
+  worldRotation += rotationSpeed * rotationDir * dt;
+
+  // Move walls inward
+  const speed = wallSpeed + difficultyLevel * 0.2;
+  for (let i = walls.length - 1; i >= 0; i--) {
+    walls[i].dist -= speed * dt;
+    if (walls[i].dist + walls[i].thickness < CENTER_RADIUS) {
+      walls.splice(i, 1);
+    }
+  }
+
+  // Spawn new walls when farthest wall is close enough
+  const farthest = walls.length > 0
+    ? walls.reduce((max, w) => Math.max(max, w.dist + w.thickness), 0)
+    : 0;
+  const spawnThreshold = getSpawnDist() * 0.6;
+  if (farthest < spawnThreshold) {
+    const newBase = Math.max(farthest + MIN_PATTERN_GAP, getSpawnDist() * 0.8);
+    spawnPattern(newBase);
+  }
+
+  // Score (1 point per second)
+  scoreTimer += dt;
+  if (scoreTimer >= 60) {
+    scoreTimer -= 60;
+    score++;
+
+    if (score >= nextThemeScore) {
+      themeIndex = (themeIndex + 1) % THEMES.length;
+      theme = THEMES[themeIndex];
+      nextThemeScore += 10;
+      snd('levelup');
+    }
+
+    if (score >= nextDiffScore) {
+      difficultyLevel++;
+      nextDiffScore += 20 + difficultyLevel * 5;
+      wallSpeed = Math.min(wallSpeed + 0.25, 6);
+      rotationSpeed = Math.min(rotationSpeed + 0.001, 0.025);
+    }
+  }
+
+  pulsePhase += 0.04 * dt;
+
+  // ===== COLLISION DETECTION =====
+  // KEY FIX: Compare playerAngle (local) against wall sides (local).
+  // Both player and walls exist in the rotated coordinate system.
+  const pa = normAngle(playerAngle);
+
+  for (const wall of walls) {
+    // Radial check: is the player at the same distance as this wall?
+    const wallInner = wall.dist;
+    const wallOuter = wall.dist + wall.thickness;
+    if (wallOuter < PLAYER_DIST - PLAYER_SIZE || wallInner > PLAYER_DIST + PLAYER_SIZE) continue;
+
+    // Angular check: is the player within this wall's side sector?
+    const wallStart = wall.side * SIDE_ANGLE;
+    const wallEnd = (wall.side + 1) * SIDE_ANGLE;
+
+    // Player angular margin (how much angle the player's size subtends)
+    const margin = Math.atan2(PLAYER_SIZE * 0.5, PLAYER_DIST);
+
+    if (angleInArc(pa + margin, wallStart, wallEnd) ||
+        angleInArc(pa - margin, wallStart, wallEnd) ||
+        angleInArc(pa, wallStart, wallEnd)) {
+      die();
+      return;
+    }
+  }
+}
+
+function die() {
+  state = 'dying';
+  deathTimer = 0;
+  flashAlpha = 1;
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('hexagon_best', bestScore.toString());
+  }
+  snd('die');
+}
+
+// ===== DRAW =====
+function draw() {
+  const w = W(), h = H();
+  const cx = CX(), cy = CY();
+
+  ctx.save();
+  if (state === 'dying') ctx.translate(shakeX, shakeY);
+
+  drawBackground(cx, cy, w, h);
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(worldRotation);
+
+  drawWalls();
+  drawCenter();
+  drawPlayer();
+
+  ctx.restore();
+
+  if (flashAlpha > 0) {
+    ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  drawUI(cx, cy, w, h);
+  ctx.restore();
+}
+
+function drawBackground(cx, cy, w, h) {
+  const maxR = Math.sqrt(w * w + h * h);
+
+  for (let i = 0; i < SIDES; i++) {
+    const a1 = i * SIDE_ANGLE + worldRotation;
+    const a2 = (i + 1) * SIDE_ANGLE + worldRotation;
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a1) * maxR, cy + Math.sin(a1) * maxR);
+    ctx.lineTo(cx + Math.cos(a2) * maxR, cy + Math.sin(a2) * maxR);
+    ctx.closePath();
+
+    const pulse = 0.85 + Math.sin(pulsePhase + i) * 0.15;
+    ctx.fillStyle = i % 2 === 0
+      ? lerpColor(theme.bg1, theme.bg2, pulse)
+      : lerpColor(theme.bg2, theme.bg1, pulse);
+    ctx.fill();
+  }
+}
+
+function drawWalls() {
+  for (const wall of walls) {
+    const a1 = wall.side * SIDE_ANGLE;
+    const a2 = (wall.side + 1) * SIDE_ANGLE;
+    const innerR = Math.max(wall.dist, CENTER_RADIUS);
+    const outerR = wall.dist + wall.thickness;
+
+    if (outerR < CENTER_RADIUS) continue;
+
+    const cos1 = Math.cos(a1), sin1 = Math.sin(a1);
+    const cos2 = Math.cos(a2), sin2 = Math.sin(a2);
+
+    ctx.beginPath();
+    ctx.moveTo(cos1 * innerR, sin1 * innerR);
+    ctx.lineTo(cos1 * outerR, sin1 * outerR);
+    ctx.lineTo(cos2 * outerR, sin2 * outerR);
+    ctx.lineTo(cos2 * innerR, sin2 * innerR);
+    ctx.closePath();
+
+    const alpha = Math.min(1, Math.max(0.4, 1 - (wall.dist - PLAYER_DIST) / 500));
+    ctx.fillStyle = hexAlpha(theme.wall, alpha);
+    ctx.fill();
+    ctx.strokeStyle = hexAlpha(theme.accent, alpha * 0.5);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+}
+
+function drawCenter() {
+  const pulse = 1 + Math.sin(pulsePhase * 2) * 0.06;
+  const r = CENTER_RADIUS * pulse;
+
+  ctx.beginPath();
+  for (let i = 0; i < SIDES; i++) {
+    const a = i * SIDE_ANGLE;
+    const x = Math.cos(a) * r, y = Math.sin(a) * r;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = theme.center;
+  ctx.fill();
+
+  const r2 = r * 0.6;
+  ctx.beginPath();
+  for (let i = 0; i < SIDES; i++) {
+    const a = i * SIDE_ANGLE;
+    const x = Math.cos(a) * r2, y = Math.sin(a) * r2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = theme.bg1;
+  ctx.fill();
+}
+
+function drawPlayer() {
+  const a = playerAngle;
+  const px = Math.cos(a) * PLAYER_DIST;
+  const py = Math.sin(a) * PLAYER_DIST;
+
+  ctx.save();
+  ctx.translate(px, py);
+  ctx.rotate(a);
+
+  // Triangle pointing outward (away from center)
+  const s = PLAYER_SIZE;
+  ctx.beginPath();
+  ctx.moveTo(s, 0);           // tip pointing outward
+  ctx.lineTo(-s * 0.5, -s * 0.6);
+  ctx.lineTo(-s * 0.5, s * 0.6);
+  ctx.closePath();
+  ctx.fillStyle = theme.player;
+  ctx.fill();
+  ctx.shadowColor = theme.accent;
+  ctx.shadowBlur = 10;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  ctx.restore();
+}
+
+function drawUI(cx, cy, w, h) {
+  if (state === 'playing' || state === 'dying') {
+    // Score
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(score.toString(), w / 2, 12);
+
+    // Timer bar
+    const barW = 60;
+    const barH = 3;
+    const barX = w / 2 - barW / 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(barX, 40, barW, barH);
+    ctx.fillStyle = theme.accent;
+    ctx.fillRect(barX, 40, barW * (scoreTimer / 60), barH);
+  }
+
+  if (state === 'menu') {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('OPEN HEXAGON', cx, cy - 50);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '12px "Courier New", monospace';
+    ctx.fillText('32888444d', cx, cy - 25);
+
+    if (bestScore > 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.font = '11px "Courier New", monospace';
+      ctx.fillText('BEST: ' + bestScore, cx, cy + 10);
+    }
+
+    const pulse = 0.4 + Math.sin(Date.now() / 350) * 0.6;
+    ctx.globalAlpha = Math.max(0.3, pulse);
+    ctx.fillStyle = theme.wall;
+    ctx.font = 'bold 14px "Courier New", monospace';
+    ctx.fillText('TAP TO START', cx, cy + 50);
+    ctx.globalAlpha = 1;
+
+    // Touch zones indicator
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = '11px "Courier New", monospace';
+    ctx.fillText('< LEFT          RIGHT >', cx, h - 30);
+  }
+
+  if (state === 'dead') {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.fillStyle = theme.wall;
+    ctx.font = 'bold 26px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('GAME OVER', cx, cy - 40);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px "Courier New", monospace';
+    ctx.fillText(score.toString(), cx, cy);
+
+    if (bestScore > 0) {
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.font = '11px "Courier New", monospace';
+      ctx.fillText('BEST: ' + bestScore, cx, cy + 25);
+    }
+
+    if (deathTimer > 40) {
+      const pulse = 0.4 + Math.sin(Date.now() / 350) * 0.6;
+      ctx.globalAlpha = Math.max(0.3, pulse);
+      ctx.fillStyle = theme.accent;
+      ctx.font = 'bold 13px "Courier New", monospace';
+      ctx.fillText('TAP TO RESTART', cx, cy + 55);
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+// ===== COLOR HELPERS =====
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+}
+
+function lerpColor(hex1, hex2, t) {
+  const [r1, g1, b1] = hexToRgb(hex1);
+  const [r2, g2, b2] = hexToRgb(hex2);
+  return `rgb(${Math.round(r1 + (r2 - r1) * t)},${Math.round(g1 + (g2 - g1) * t)},${Math.round(b1 + (b2 - b1) * t)})`;
+}
+
+function hexAlpha(hex, a) {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ===== GAME LOOP =====
+function loop(time) {
+  const dt = lastTime ? Math.min((time - lastTime) / 16.67, 3) : 1;
+  lastTime = time;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

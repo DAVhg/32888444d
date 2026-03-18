@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Photo Booth — 32888444d</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #2a2a2a;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #fff;
+    }
+
+    /* ── Back link ── */
+    #back-link {
+      position: fixed; top: 10px; left: 14px; z-index: 200;
+      color: rgba(255,255,255,.6); text-decoration: none; font-size: 13px;
+      font-weight: 500; transition: color .2s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    #back-link:hover { color: #fff; }
+    #back-link svg { width: 16px; height: 16px; }
+
+    /* ── App shell ── */
+    #app {
+      display: flex; flex-direction: column;
+      height: 100vh; height: 100dvh;
+      background: linear-gradient(180deg, #3a3a3a 0%, #2a2a2a 40%, #1e1e1e 100%);
+    }
+
+    /* ── Top bar (brushed metal) ── */
+    #topbar {
+      height: 44px; min-height: 44px;
+      background: linear-gradient(180deg, #4a4a4a, #3a3a3a);
+      border-bottom: 1px solid #222;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    #topbar-title {
+      font-size: 13px; font-weight: 600;
+      color: rgba(255,255,255,.8);
+      letter-spacing: .02em;
+    }
+    #cam-switch-btn {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,.6); font-size: 20px;
+      padding: 4px; transition: color .2s;
+    }
+    #cam-switch-btn:active { color: #fff; }
+
+    /* ── Viewfinder ── */
+    #viewfinder-wrap {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 12px 12px 0;
+      position: relative; overflow: hidden;
+    }
+    #viewfinder {
+      width: 100%; height: 100%;
+      position: relative; overflow: hidden;
+      border-radius: 6px;
+      background: #111;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,.5),
+        inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    #camera-video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      display: block;
+    }
+    #effect-canvas {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    /* Glossy reflection overlay */
+    #viewfinder::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 40%; pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,.04) 0%, transparent 100%);
+      border-radius: 6px 6px 0 0;
+    }
+
+    #flash {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: #fff; opacity: 0; pointer-events: none; z-index: 10;
+    }
+    #flash.active { animation: flash-anim .35s ease-out forwards; }
+    @keyframes flash-anim { 0% { opacity: .95; } 100% { opacity: 0; } }
+
+    #countdown-display {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 100px; font-weight: 600;
+      color: #fff; opacity: 0; pointer-events: none;
+      z-index: 8; text-shadow: 0 4px 30px rgba(0,0,0,.7);
+    }
+    #countdown-display.show {
+      animation: count-pop .7s ease-out forwards;
+    }
+    @keyframes count-pop {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1.4); }
+      70% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(.7); }
+    }
+
+    /* ── Permission screen ── */
+    #permission-screen {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, #1a1a1a 0%, #111 100%);
+      z-index: 20; gap: 20px;
+    }
+    #permission-screen.hidden { display: none; }
+    .perm-icon {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #444, #333);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    }
+    #permission-screen p {
+      font-size: 14px; color: rgba(255,255,255,.5);
+      text-align: center; max-width: 240px; line-height: 1.5;
+    }
+    #perm-error {
+      font-size: 12px; color: #ff6b6b;
+      text-align: center; max-width: 260px;
+      line-height: 1.5; display: none;
+    }
+    #start-cam-btn {
+      padding: 10px 32px;
+      background: linear-gradient(180deg, #5ac8fa, #007aff);
+      color: #fff; border: none; border-radius: 20px;
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      cursor: pointer; letter-spacing: .01em;
+      box-shadow: 0 2px 8px rgba(0,122,255,.4);
+      transition: transform .1s, box-shadow .15s;
+    }
+    #start-cam-btn:active {
+      transform: scale(.96);
+      box-shadow: 0 1px 4px rgba(0,122,255,.3);
+    }
+
+    /* ── Shelf / bottom area ── */
+    #shelf {
+      background: linear-gradient(180deg, #333 0%, #2a2a2a 6%, #252525 100%);
+      border-top: 1px solid #444;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    /* ── Effect strip ── */
+    #effect-strip {
+      height: 88px;
+      display: flex; align-items: center;
+      overflow-x: auto; overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; gap: 6px;
+      padding: 8px 10px;
+    }
+    #effect-strip::-webkit-scrollbar { display: none; }
+
+    .effect-thumb {
+      flex: 0 0 64px; height: 64px;
+      border-radius: 8px; overflow: hidden;
+      cursor: pointer; position: relative;
+      border: 2px solid transparent;
+      transition: border-color .2s, transform .15s;
+      box-shadow: 0 1px 4px rgba(0,0,0,.5);
+    }
+    .effect-thumb.active {
+      border-color: #007aff;
+      transform: scale(1.08);
+      box-shadow: 0 0 0 1px #007aff, 0 2px 8px rgba(0,122,255,.4);
+    }
+    .effect-thumb canvas {
+      width: 100%; height: 100%; display: block;
+    }
+    .effect-thumb .label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,.8));
+      padding: 10px 3px 3px;
+      font-size: 7px; text-align: center;
+      text-transform: uppercase; color: rgba(255,255,255,.85);
+      font-weight: 600; letter-spacing: .03em;
+    }
+
+    /* ── Controls bar ── */
+    #controls {
+      height: 80px; min-height: 80px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 28px;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    /* Shutter - red Photo Booth style */
+    #shutter {
+      width: 62px; height: 62px;
+      border-radius: 50%; border: none;
+      background: linear-gradient(180deg, #ff4444, #cc0000);
+      cursor: pointer; position: relative;
+      box-shadow:
+        0 2px 6px rgba(0,0,0,.5),
+        inset 0 1px 0 rgba(255,255,255,.3),
+        inset 0 -2px 4px rgba(0,0,0,.2);
+      transition: transform .08s;
+    }
+    #shutter::before {
+      content: ''; position: absolute;
+      top: 4px; left: 4px; right: 4px; bottom: 50%;
+      border-radius: 50% 50% 50% 50% / 100% 100% 0% 0%;
+      background: linear-gradient(180deg, rgba(255,255,255,.35) 0%, rgba(255,255,255,.05) 100%);
+    }
+    /* Camera icon inside shutter */
+    #shutter::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.9);
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 0 transparent;
+    }
+    #shutter:active { transform: scale(.9); }
+
+    .ctrl-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,.1);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.7);
+      font-size: 15px; transition: background .2s;
+    }
+    .ctrl-btn:active { background: rgba(255,255,255,.2); }
+    .ctrl-btn.active-mode { color: #007aff; }
+
+    /* ── Gallery overlay ── */
+    #gallery {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,.96); z-index: 50;
+      display: none; flex-direction: column;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    #gallery.open { display: flex; }
+    #gallery-header {
+      height: 52px; display: flex;
+      align-items: center; justify-content: space-between;
+      padding: 0 16px;
+    }
+    #gallery-header button {
+      background: none; border: none; color: #007aff;
+      font-family: inherit; font-size: 15px; font-weight: 500;
+      cursor: pointer;
+    }
+    #gallery-count {
+      font-size: 13px; color: rgba(255,255,255,.5); font-weight: 500;
+    }
+    #gallery-scroll {
+      flex: 1; overflow-y: auto;
+      padding: 2px; display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px; align-content: start;
+    }
+    #gallery-scroll img {
+      width: 100%; aspect-ratio: 1;
+      object-fit: cover; cursor: pointer;
+    }
+
+    /* ── Full image view ── */
+    #full-view {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: #000; z-index: 60;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    #full-view.open { display: flex; }
+    #full-view img { max-width: 100%; max-height: 80vh; object-fit: contain; }
+    #full-view-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 64px; display: flex;
+      align-items: center; justify-content: center; gap: 40px;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      background: linear-gradient(transparent, rgba(0,0,0,.8));
+    }
+    #full-view-bar button {
+      background: none; border: none;
+      color: #007aff; font-family: inherit;
+      font-size: 15px; font-weight: 500; cursor: pointer;
+    }
+    #full-view-close {
+      position: absolute; top: 10px; right: 14px;
+      background: rgba(255,255,255,.15); border: none;
+      color: #fff; width: 30px; height: 30px;
+      border-radius: 50%; font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Effect name toast ── */
+    #effect-toast {
+      position: absolute; bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px; font-weight: 600;
+      background: rgba(0,0,0,.65); padding: 6px 18px;
+      border-radius: 16px; opacity: 0;
+      transition: opacity .25s; z-index: 5;
+      white-space: nowrap; backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    #effect-toast.show { opacity: 1; }
+
+    /* Photo count badge */
+    #photo-badge {
+      position: absolute; top: -4px; right: -4px;
+      background: #ff3b30; color: #fff;
+      font-size: 9px; font-weight: 700;
+      min-width: 16px; height: 16px;
+      border-radius: 8px; display: none;
+      align-items: center; justify-content: center;
+      padding: 0 4px;
+    }
+    #photo-badge.show { display: flex; }
+  </style>
+</head>
+<body>
+  <a id="back-link" href="index.html">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    32888444d
+  </a>
+
+  <div id="app">
+    <div id="topbar">
+      <span id="topbar-title">Photo Booth</span>
+      <button id="cam-switch-btn" title="Cambiar camara">&#x21BB;</button>
+    </div>
+
+    <div id="viewfinder-wrap">
+      <div id="viewfinder">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <canvas id="effect-canvas"></canvas>
+        <div id="flash"></div>
+        <div id="countdown-display"></div>
+        <div id="effect-toast"></div>
+
+        <div id="permission-screen">
+          <div class="perm-icon">&#x1F4F7;</div>
+          <p>Permite el acceso a la camara para usar Photo Booth</p>
+          <p id="perm-error"></p>
+          <button id="start-cam-btn">Permitir camara</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="shelf">
+      <div id="effect-strip"></div>
+      <div id="controls">
+        <button class="ctrl-btn" id="timer-btn" title="Temporizador">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="5" x2="12" y2="3"/><line x1="9" y1="2" x2="15" y2="2"/></svg>
+        </button>
+        <button id="shutter" title="Foto"></button>
+        <button class="ctrl-btn" id="gallery-btn" title="Galeria" style="position:relative">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <span id="photo-badge">0</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="gallery">
+    <div id="gallery-header">
+      <button id="gallery-close">Cerrar</button>
+      <span id="gallery-count"></span>
+      <button id="gallery-clear">Borrar todo</button>
+    </div>
+    <div id="gallery-scroll"></div>
+  </div>
+
+  <div id="full-view">
+    <button id="full-view-close">&#x2715;</button>
+    <img id="full-view-img" src="">
+    <div id="full-view-bar">
+      <button id="full-view-download">Guardar</button>
+      <button id="full-view-delete">Eliminar</button>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    const video      = document.getElementById('camera-video');
+    const canvas     = document.getElementById('effect-canvas');
+    const ctx        = canvas.getContext('2d', { willReadFrequently: true });
+    const flash      = document.getElementById('flash');
+    const countdownEl= document.getElementById('countdown-display');
+    const strip      = document.getElementById('effect-strip');
+    const toast      = document.getElementById('effect-toast');
+    const permScreen = document.getElementById('permission-screen');
+    const permError  = document.getElementById('perm-error');
+    const badge      = document.getElementById('photo-badge');
+
+    let stream        = null;
+    let currentEffect = 'normal';
+    let timerMode     = 0;
+    let photos        = [];
+    let facingMode    = 'user';
+    let rafId         = null;
+    let thumbInterval = null;
+
+    const EFFECTS = [
+      { id: 'normal',       name: 'Normal' },
+      { id: 'sepia',        name: 'Sepia' },
+      { id: 'bw',           name: 'B/N' },
+      { id: 'vintage',      name: 'Vintage' },
+      { id: 'thermal',      name: 'Thermal' },
+      { id: 'xray',         name: 'Rayos X' },
+      { id: 'mirror',       name: 'Espejo' },
+      { id: 'kaleidoscope', name: 'Caleidoscopio' },
+      { id: 'squeeze',      name: 'Squeeze' },
+      { id: 'bulge',        name: 'Fish Eye' },
+      { id: 'twirl',        name: 'Twirl' },
+      { id: 'stretch',      name: 'Stretch' },
+      { id: 'pixelate',     name: 'Pixel' },
+      { id: 'comic',        name: 'Comic' },
+      { id: 'neon',         name: 'Neon' },
+      { id: 'lighttunnel',  name: 'Light Tunnel' },
+      { id: 'pop',          name: 'Pop Art' },
+      { id: 'emboss',       name: 'Emboss' },
+    ];
+
+    /* ── Camera ── */
+    async function startCamera() {
+      try {
+        permError.style.display = 'none';
+        if (stream) stream.getTracks().forEach(t => t.stop());
+
+        // Check if getUserMedia is available
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error('notSupported');
+        }
+
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false
+        });
+        video.srcObject = stream;
+
+        // Wait for video to actually be ready
+        await new Promise((resolve, reject) => {
+          video.onloadedmetadata = () => {
+            video.play().then(resolve).catch(reject);
+          };
+          video.onerror = reject;
+          setTimeout(() => reject(new Error('timeout')), 8000);
+        });
+
+        permScreen.classList.add('hidden');
+        resizeCanvas();
+        startRender();
+        startThumbPreviews();
+      } catch (e) {
+        console.error('Camera error:', e);
+        permError.style.display = 'block';
+        if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+          permError.textContent = 'Permiso denegado. Activa la camara en los ajustes de tu navegador y recarga la pagina.';
+        } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+          permError.textContent = 'No se encontro ninguna camara en este dispositivo.';
+        } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
+          permError.textContent = 'La camara esta en uso por otra aplicacion. Cierra la otra app e intenta de nuevo.';
+        } else if (e.message === 'notSupported') {
+          permError.textContent = 'Tu navegador no soporta acceso a la camara. Usa Chrome, Safari o Firefox.';
+        } else {
+          permError.textContent = 'Error al acceder a la camara. Asegurate de usar HTTPS y un navegador compatible.';
+        }
+      }
+    }
+
+    function resizeCanvas() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+
+    document.getElementById('start-cam-btn').addEventListener('click', startCamera);
+    document.getElementById('cam-switch-btn').addEventListener('click', () => {
+      facingMode = facingMode === 'user' ? 'environment' : 'user';
+      startCamera();
+    });
+
+    /* ── Render ── */
+    function startRender() {
+      if (rafId) cancelAnimationFrame(rafId);
+      (function loop() {
+        if (video.readyState >= 2) drawFrame(ctx, canvas.width, canvas.height, currentEffect);
+        rafId = requestAnimationFrame(loop);
+      })();
+    }
+
+    function drawFrame(c, w, h, effect) {
+      if (w === 0 || h === 0) return;
+      c.save();
+      if (facingMode === 'user') { c.translate(w, 0); c.scale(-1, 1); }
+      c.drawImage(video, 0, 0, w, h);
+      c.restore();
+
+      if (effect === 'normal') return;
+
+      const imageData = c.getImageData(0, 0, w, h);
+      const d = imageData.data;
+      const mx = w / 2, my = h / 2;
+
+      switch (effect) {
+        case 'sepia':
+          for (let i = 0; i < d.length; i += 4) {
+            const r = d[i], g = d[i+1], b = d[i+2];
+            d[i]   = Math.min(255, r*.393 + g*.769 + b*.189);
+            d[i+1] = Math.min(255, r*.349 + g*.686 + b*.168);
+            d[i+2] = Math.min(255, r*.272 + g*.534 + b*.131);
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+
+        case 'bw':
+          for (let i = 0; i < d.length; i += 4) {
+            const v = d[i]*.299 + d[i+1]*.587 + d[i+2]*.114;
+            d[i] = d[i+1] = d[i+2] = v;
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+
+        case 'vintage':
+          for (let i = 0; i < d.length; i += 4) {
+            const r = d[i], g = d[i+1], b = d[i+2];
+            d[i]   = Math.min(255, r*.6 + g*.3 + b*.1 + 40);
+            d[i+1] = Math.min(255, r*.2 + g*.5 + b*.1 + 20);
+            d[i+2] = Math.min(255, r*.1 + g*.2 + b*.4 + 10);
+          }
+          c.putImageData(imageData, 0, 0);
+          const vg = c.createRadialGradient(mx, my, w*.25, mx, my, w*.7);
+          vg.addColorStop(0, 'rgba(0,0,0,0)');
+          vg.addColorStop(1, 'rgba(0,0,0,.6)');
+          c.fillStyle = vg; c.fillRect(0, 0, w, h);
+          break;
+
+        case 'thermal':
+          for (let i = 0; i < d.length; i += 4) {
+            const v = (d[i] + d[i+1] + d[i+2]) / 3 / 255;
+            if (v < .25)      { d[i]=0; d[i+1]=0; d[i+2]=v*4*255; }
+            else if (v < .5)  { d[i]=0; d[i+1]=(v-.25)*4*255; d[i+2]=255; }
+            else if (v < .75) { d[i]=(v-.5)*4*255; d[i+1]=255; d[i+2]=(1-(v-.5)*4)*255; }
+            else              { d[i]=255; d[i+1]=(1-(v-.75)*4)*255; d[i+2]=0; }
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+
+        case 'xray':
+          for (let i = 0; i < d.length; i += 4) {
+            d[i]   = (255-d[i])*.8;
+            d[i+1] = (255-d[i+1])*.9;
+            d[i+2] = Math.min(255, (255-d[i+2])*1.2);
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+
+        case 'mirror': {
+          const half = c.getImageData(0, 0, Math.floor(w/2), h);
+          c.putImageData(half, 0, 0);
+          c.save(); c.translate(w, 0); c.scale(-1, 1);
+          c.putImageData(half, 0, 0); c.restore();
+          break;
+        }
+
+        case 'kaleidoscope': {
+          const src = c.getImageData(0, 0, w, h);
+          const dst = c.createImageData(w, h);
+          const seg = 8, step = Math.PI*2/seg;
+          for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+            let dx=x-mx, dy=y-my, a=Math.atan2(dy,dx), dist=Math.sqrt(dx*dx+dy*dy);
+            a = ((a%step)+step)%step;
+            if (a > step/2) a = step-a;
+            const sx=Math.min(w-1,Math.max(0,Math.round(mx+dist*Math.cos(a))));
+            const sy=Math.min(h-1,Math.max(0,Math.round(my+dist*Math.sin(a))));
+            const si=(sy*w+sx)*4, di=(y*w+x)*4;
+            dst.data[di]=src.data[si]; dst.data[di+1]=src.data[si+1];
+            dst.data[di+2]=src.data[si+2]; dst.data[di+3]=255;
+          }
+          c.putImageData(dst, 0, 0);
+          break;
+        }
+
+        case 'squeeze': {
+          const src=c.getImageData(0,0,w,h), dst=c.createImageData(w,h);
+          const rad=Math.min(w,h)*.45;
+          for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+            let dx=x-mx, dy=y-my, dist=Math.sqrt(dx*dx+dy*dy), sx=x, sy=y;
+            if (dist<rad) { const f=Math.pow(dist/rad,1.8); sx=Math.round(mx+dx*f); sy=Math.round(my+dy*f); }
+            sx=Math.min(w-1,Math.max(0,sx)); sy=Math.min(h-1,Math.max(0,sy));
+            const si=(sy*w+sx)*4, di=(y*w+x)*4;
+            dst.data[di]=src.data[si]; dst.data[di+1]=src.data[si+1];
+            dst.data[di+2]=src.data[si+2]; dst.data[di+3]=255;
+          }
+          c.putImageData(dst, 0, 0);
+          break;
+        }
+
+        case 'bulge': {
+          const src=c.getImageData(0,0,w,h), dst=c.createImageData(w,h);
+          const rad=Math.min(w,h)*.45;
+          for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+            let dx=x-mx, dy=y-my, dist=Math.sqrt(dx*dx+dy*dy), sx=x, sy=y;
+            if (dist<rad) { const f=Math.pow(dist/rad,.45); sx=Math.round(mx+dx*f); sy=Math.round(my+dy*f); }
+            sx=Math.min(w-1,Math.max(0,sx)); sy=Math.min(h-1,Math.max(0,sy));
+            const si=(sy*w+sx)*4, di=(y*w+x)*4;
+            dst.data[di]=src.data[si]; dst.data[di+1]=src.data[si+1];
+            dst.data[di+2]=src.data[si+2]; dst.data[di+3]=255;
+          }
+          c.putImageData(dst, 0, 0);
+          break;
+        }
+
+        case 'twirl': {
+          const src=c.getImageData(0,0,w,h), dst=c.createImageData(w,h);
+          const rad=Math.min(w,h)*.45, tw=3.0;
+          for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+            let dx=x-mx, dy=y-my, dist=Math.sqrt(dx*dx+dy*dy), sx=x, sy=y;
+            if (dist<rad) { const t=1-dist/rad, a=t*t*tw, ca=Math.cos(a), sa=Math.sin(a);
+              sx=Math.round(mx+dx*ca-dy*sa); sy=Math.round(my+dx*sa+dy*ca); }
+            sx=Math.min(w-1,Math.max(0,sx)); sy=Math.min(h-1,Math.max(0,sy));
+            const si=(sy*w+sx)*4, di=(y*w+x)*4;
+            dst.data[di]=src.data[si]; dst.data[di+1]=src.data[si+1];
+            dst.data[di+2]=src.data[si+2]; dst.data[di+3]=255;
+          }
+          c.putImageData(dst, 0, 0);
+          break;
+        }
+
+        case 'stretch': {
+          const src=c.getImageData(0,0,w,h), dst=c.createImageData(w,h);
+          for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+            const dy=y-my, f=.3+.7*Math.pow(Math.abs(dy)/(h/2),.4);
+            const sy=Math.min(h-1,Math.max(0,Math.round(my+dy*f)));
+            const si=(sy*w+x)*4, di=(y*w+x)*4;
+            dst.data[di]=src.data[si]; dst.data[di+1]=src.data[si+1];
+            dst.data[di+2]=src.data[si+2]; dst.data[di+3]=255;
+          }
+          c.putImageData(dst, 0, 0);
+          break;
+        }
+
+        case 'pixelate': {
+          const sz=10;
+          for (let y=0;y<h;y+=sz) for (let x=0;x<w;x+=sz) {
+            const i=(y*w+x)*4;
+            c.fillStyle=`rgb(${d[i]},${d[i+1]},${d[i+2]})`; c.fillRect(x,y,sz,sz);
+          }
+          break;
+        }
+
+        case 'comic':
+          for (let i=0;i<d.length;i+=4) { d[i]=Math.floor(d[i]/48)*48; d[i+1]=Math.floor(d[i+1]/48)*48; d[i+2]=Math.floor(d[i+2]/48)*48; }
+          for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++) {
+            const i=(y*w+x)*4, r2=(y*w+(x+1))*4, b2=((y+1)*w+x)*4;
+            if (Math.abs(d[i]-d[r2])+Math.abs(d[i]-d[b2])+Math.abs(d[i+1]-d[r2+1])+Math.abs(d[i+1]-d[b2+1])+Math.abs(d[i+2]-d[r2+2])+Math.abs(d[i+2]-d[b2+2])>80) d[i]=d[i+1]=d[i+2]=0;
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+
+        case 'neon': {
+          const cp=new Uint8ClampedArray(d);
+          for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++) {
+            const i=(y*w+x)*4, l=(y*w+(x-1))*4, t2=((y-1)*w+x)*4;
+            d[i]=Math.min(255,(Math.abs(cp[i]-cp[l])+Math.abs(cp[i]-cp[t2]))*3);
+            d[i+1]=Math.min(255,(Math.abs(cp[i+1]-cp[l+1])+Math.abs(cp[i+1]-cp[t2+1]))*3);
+            d[i+2]=Math.min(255,(Math.abs(cp[i+2]-cp[l+2])+Math.abs(cp[i+2]-cp[t2+2]))*3);
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+        }
+
+        case 'lighttunnel': {
+          const src=c.getImageData(0,0,w,h), dst=c.createImageData(w,h), tm=Date.now()*.001;
+          const mxD=Math.sqrt(mx*mx+my*my);
+          for (let y=0;y<h;y++) for (let x=0;x<w;x++) {
+            const dx=x-mx, dy=y-my, a=Math.atan2(dy,dx), dist=Math.sqrt(dx*dx+dy*dy);
+            const rp=Math.sin(dist*.05+tm*2)*15;
+            const sx=Math.min(w-1,Math.max(0,Math.round(mx+(dist+rp)*Math.cos(a))));
+            const sy=Math.min(h-1,Math.max(0,Math.round(my+(dist+rp)*Math.sin(a))));
+            const si=(sy*w+sx)*4, di=(y*w+x)*4, br=1+(1-dist/mxD)*.5;
+            dst.data[di]=Math.min(255,src.data[si]*br);
+            dst.data[di+1]=Math.min(255,src.data[si+1]*br);
+            dst.data[di+2]=Math.min(255,src.data[si+2]*br);
+            dst.data[di+3]=255;
+          }
+          c.putImageData(dst, 0, 0);
+          break;
+        }
+
+        case 'pop':
+          for (let i=0;i<d.length;i+=4) {
+            let r=Math.min(255,Math.max(0,(d[i]-128)*1.8+128));
+            let g=Math.min(255,Math.max(0,(d[i+1]-128)*1.8+128));
+            let b=Math.min(255,Math.max(0,(d[i+2]-128)*1.8+128));
+            const gr=r*.299+g*.587+b*.114;
+            d[i]=Math.min(255,Math.max(0,gr+(r-gr)*2.5));
+            d[i+1]=Math.min(255,Math.max(0,gr+(g-gr)*2.5));
+            d[i+2]=Math.min(255,Math.max(0,gr+(b-gr)*2.5));
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+
+        case 'emboss': {
+          const cp2=new Uint8ClampedArray(d);
+          for (let y=1;y<h-1;y++) for (let x=1;x<w-1;x++) {
+            const i=(y*w+x)*4, tl=((y-1)*w+(x-1))*4, br=((y+1)*w+(x+1))*4;
+            d[i]=Math.min(255,Math.max(0,cp2[br]-cp2[tl]+128));
+            d[i+1]=Math.min(255,Math.max(0,cp2[br+1]-cp2[tl+1]+128));
+            d[i+2]=Math.min(255,Math.max(0,cp2[br+2]-cp2[tl+2]+128));
+          }
+          c.putImageData(imageData, 0, 0);
+          break;
+        }
+      }
+    }
+
+    /* ── Thumbnails ── */
+    function buildEffectStrip() {
+      strip.innerHTML = '';
+      EFFECTS.forEach(eff => {
+        const thumb = document.createElement('div');
+        thumb.className = 'effect-thumb' + (eff.id === currentEffect ? ' active' : '');
+        thumb.dataset.effect = eff.id;
+        const tc = document.createElement('canvas');
+        tc.width = 64; tc.height = 64;
+        thumb.appendChild(tc);
+        const lbl = document.createElement('div');
+        lbl.className = 'label'; lbl.textContent = eff.name;
+        thumb.appendChild(lbl);
+        thumb.addEventListener('click', () => {
+          currentEffect = eff.id;
+          document.querySelectorAll('.effect-thumb').forEach(t => t.classList.remove('active'));
+          thumb.classList.add('active');
+          showToast(eff.name);
+        });
+        strip.appendChild(thumb);
+      });
+    }
+
+    function startThumbPreviews() {
+      if (thumbInterval) clearInterval(thumbInterval);
+      thumbInterval = setInterval(() => {
+        if (video.readyState < 2) return;
+        document.querySelectorAll('.effect-thumb').forEach(th => {
+          const tc = th.querySelector('canvas'), tctx = tc.getContext('2d');
+          tctx.save();
+          if (facingMode === 'user') { tctx.translate(64, 0); tctx.scale(-1, 1); }
+          tctx.drawImage(video, 0, 0, 64, 64);
+          tctx.restore();
+          if (th.dataset.effect !== 'normal') drawFrame(tctx, 64, 64, th.dataset.effect);
+        });
+      }, 500);
+    }
+
+    /* ── Toast ── */
+    let toastTm;
+    function showToast(t) {
+      toast.textContent = t; toast.classList.add('show');
+      clearTimeout(toastTm);
+      toastTm = setTimeout(() => toast.classList.remove('show'), 1200);
+    }
+
+    /* ── Timer ── */
+    const timerBtn = document.getElementById('timer-btn');
+    timerBtn.addEventListener('click', () => {
+      timerMode = timerMode === 0 ? 3 : timerMode === 3 ? 10 : 0;
+      timerBtn.classList.toggle('active-mode', timerMode > 0);
+      timerBtn.title = timerMode === 0 ? 'Temporizador' : `${timerMode}s`;
+    });
+
+    /* ── Shutter ── */
+    document.getElementById('shutter').addEventListener('click', () => {
+      if (!stream) return;
+      if (timerMode === 0) takePhoto();
+      else runCountdown(timerMode).then(takePhoto);
+    });
+
+    function runCountdown(sec) {
+      return new Promise(res => {
+        let s = sec;
+        (function tick() {
+          if (s === 0) { res(); return; }
+          countdownEl.textContent = s;
+          countdownEl.classList.remove('show'); void countdownEl.offsetWidth;
+          countdownEl.classList.add('show');
+          s--; setTimeout(tick, 1000);
+        })();
+      });
+    }
+
+    function takePhoto() {
+      flash.classList.remove('active'); void flash.offsetWidth; flash.classList.add('active');
+      const cc = document.createElement('canvas');
+      const vw = video.videoWidth || 640, vh = video.videoHeight || 480;
+      cc.width = vw; cc.height = vh;
+      const cctx = cc.getContext('2d', { willReadFrequently: true });
+      cctx.save();
+      if (facingMode === 'user') { cctx.translate(vw, 0); cctx.scale(-1, 1); }
+      cctx.drawImage(video, 0, 0, vw, vh);
+      cctx.restore();
+      if (currentEffect !== 'normal') drawFrame(cctx, vw, vh, currentEffect);
+      photos.unshift(cc.toDataURL('image/jpeg', .92));
+      updateBadge();
+      if (navigator.vibrate) navigator.vibrate(30);
+    }
+
+    function updateBadge() {
+      badge.textContent = photos.length;
+      badge.classList.toggle('show', photos.length > 0);
+    }
+
+    /* ── Gallery ── */
+    const gallery = document.getElementById('gallery');
+    const galleryScroll = document.getElementById('gallery-scroll');
+    const galleryCount = document.getElementById('gallery-count');
+    const fullView = document.getElementById('full-view');
+    const fullViewImg = document.getElementById('full-view-img');
+    let viewIdx = -1;
+
+    document.getElementById('gallery-btn').addEventListener('click', openGallery);
+    document.getElementById('gallery-close').addEventListener('click', () => gallery.classList.remove('open'));
+    document.getElementById('gallery-clear').addEventListener('click', () => {
+      if (photos.length && confirm('Borrar todas las fotos?')) { photos = []; openGallery(); updateBadge(); }
+    });
+
+    function openGallery() {
+      gallery.classList.add('open');
+      galleryScroll.innerHTML = '';
+      photos.forEach((src, i) => {
+        const img = document.createElement('img'); img.src = src;
+        img.addEventListener('click', () => openFull(i));
+        galleryScroll.appendChild(img);
+      });
+      galleryCount.textContent = `${photos.length} foto${photos.length !== 1 ? 's' : ''}`;
+    }
+
+    function openFull(i) {
+      viewIdx = i; fullViewImg.src = photos[i]; fullView.classList.add('open');
+    }
+
+    document.getElementById('full-view-close').addEventListener('click', () => fullView.classList.remove('open'));
+    document.getElementById('full-view-download').addEventListener('click', () => {
+      const a = document.createElement('a'); a.href = photos[viewIdx];
+      a.download = `photobooth-${Date.now()}.jpg`; a.click();
+    });
+    document.getElementById('full-view-delete').addEventListener('click', () => {
+      photos.splice(viewIdx, 1); fullView.classList.remove('open'); openGallery(); updateBadge();
+    });
+
+    /* ── Resize ── */
+    window.addEventListener('resize', resizeCanvas);
+
+    /* ── Init ── */
+    buildEffectStrip();
+    updateBadge();
+
+    // Auto-start camera
+    startCamera();
+  })();
+  </script>
+</body>
+</html>
