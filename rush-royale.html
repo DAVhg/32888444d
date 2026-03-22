@@ -36,7 +36,8 @@
         .card .check { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background: #2ecc71; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; }
         .card.selected .check { display: flex; }
 
-        .card-icon { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; }
+        .card-icon { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; overflow: hidden; }
+        .card-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         .card-name { font-size: 0.7em; line-height: 1.2; }
         .card-tier { font-size: 0.6em; margin-top: 2px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
 
@@ -136,75 +137,75 @@
 <script>
 // === DATA ===
 const units = [
-    // LEGENDARY (27 cards)
-    {name:"Corsair",rarity:"legendary",tier:"S",icon:"🏴‍☠️",role:"dps"},
-    {name:"Spirit Master",rarity:"legendary",tier:"S",icon:"👻",role:"dps"},
-    {name:"Knight Statue",rarity:"legendary",tier:"S",icon:"🗿",role:"support"},
-    {name:"Witch",rarity:"legendary",tier:"S",icon:"🧙‍♀️",role:"support"},
-    {name:"Meteor",rarity:"legendary",tier:"S",icon:"☄️",role:"dps"},
-    {name:"Enchanted Sword",rarity:"legendary",tier:"S",icon:"⚔️",role:"dps"},
-    {name:"Treant",rarity:"legendary",tier:"S",icon:"🌳",role:"dps"},
-    {name:"Bard",rarity:"legendary",tier:"S",icon:"🎵",role:"support"},
-    {name:"Monk",rarity:"legendary",tier:"S",icon:"🧘",role:"support"},
-    {name:"Genie",rarity:"legendary",tier:"S",icon:"🧞",role:"dps"},
-    {name:"Dryad",rarity:"legendary",tier:"S",icon:"🌿",role:"support"},
-    {name:"Demon Hunter",rarity:"legendary",tier:"A",icon:"😈",role:"dps"},
-    {name:"Summoner",rarity:"legendary",tier:"A",icon:"📜",role:"support"},
-    {name:"Harlequin",rarity:"legendary",tier:"A",icon:"🃏",role:"support"},
-    {name:"Scrapper",rarity:"legendary",tier:"A",icon:"🔧",role:"support"},
-    {name:"Sea Dog",rarity:"legendary",tier:"A",icon:"🐕",role:"dps"},
-    {name:"Gunslinger",rarity:"legendary",tier:"A",icon:"🔫",role:"dps"},
-    {name:"Cultist",rarity:"legendary",tier:"A",icon:"🔮",role:"dps"},
-    {name:"Blade Dancer",rarity:"legendary",tier:"A",icon:"💃",role:"dps"},
-    {name:"Robot",rarity:"legendary",tier:"A",icon:"🤖",role:"dps"},
-    {name:"Inquisitor",rarity:"legendary",tier:"B",icon:"⚡",role:"dps"},
-    {name:"Bruiser",rarity:"legendary",tier:"B",icon:"👊",role:"dps"},
-    {name:"Minotaur",rarity:"legendary",tier:"B",icon:"🐂",role:"support"},
-    {name:"Tesla",rarity:"legendary",tier:"B",icon:"🔋",role:"dps"},
-    {name:"Boreas",rarity:"legendary",tier:"C",icon:"❄️",role:"dps"},
-    {name:"Shaman",rarity:"legendary",tier:"C",icon:"🪶",role:"support"},
-    {name:"Demonologist",rarity:"legendary",tier:"C",icon:"📖",role:"dps"},
-    {name:"Stasis",rarity:"legendary",tier:"C",icon:"⏸️",role:"support"},
-    {name:"Clock of Power",rarity:"legendary",tier:"C",icon:"🕐",role:"support"},
-    {name:"Hex",rarity:"legendary",tier:"C",icon:"✡️",role:"support"},
-    {name:"Frost",rarity:"legendary",tier:"B",icon:"🥶",role:"support"},
-    {name:"Trapper",rarity:"legendary",tier:"B",icon:"🪤",role:"support"},
+    // LEGENDARY (32 cards)
+    {name:"Corsair",rarity:"legendary",tier:"S",icon:"🏴‍☠️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/0/09/Corsair2.jpg/revision/latest?cb=20210528134129"},
+    {name:"Spirit Master",rarity:"legendary",tier:"S",icon:"👻",role:"dps",img:"https://rushroyale.my.games/uploads/images/pawnpanda-icon-65eecb7c23283.png"},
+    {name:"Knight Statue",rarity:"legendary",tier:"S",icon:"🗿",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/1/1d/KnightStatue2.jpg/revision/latest?cb=20210528134749"},
+    {name:"Witch",rarity:"legendary",tier:"S",icon:"🧙‍♀️",role:"support",img:"https://rushroyale.my.games/uploads/images/witch-658014b5ca06b.png"},
+    {name:"Meteor",rarity:"legendary",tier:"S",icon:"☄️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/5/57/Meteor2.jpg/revision/latest?cb=20210528134833"},
+    {name:"Enchanted Sword",rarity:"legendary",tier:"S",icon:"⚔️",role:"dps",img:"https://rushroyale.my.games/uploads/images/118-copy-5-65eecc5b162a4.png"},
+    {name:"Treant",rarity:"legendary",tier:"S",icon:"🌳",role:"dps",img:"https://rushroyale.my.games/uploads/images/treeant-250x250-2-67e979053a77c.png"},
+    {name:"Bard",rarity:"legendary",tier:"S",icon:"🎵",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/2/2b/Bard-UnitArt.webp/revision/latest?cb=20260106153458"},
+    {name:"Monk",rarity:"legendary",tier:"S",icon:"🧘",role:"support",img:""},
+    {name:"Genie",rarity:"legendary",tier:"S",icon:"🧞",role:"dps",img:"https://rushroyale.my.games/uploads/images/pawngenie-icon-6744453047ebc.png"},
+    {name:"Dryad",rarity:"legendary",tier:"S",icon:"🌿",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/6/61/Dryad2.jpg/revision/latest?cb=20210528134438"},
+    {name:"Demon Hunter",rarity:"legendary",tier:"A",icon:"😈",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a6/DemonHunter2.jpg/revision/latest?cb=20210528133914"},
+    {name:"Summoner",rarity:"legendary",tier:"A",icon:"📜",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/e/e6/Summoner2.jpg/revision/latest?cb=20210528134707"},
+    {name:"Harlequin",rarity:"legendary",tier:"A",icon:"🃏",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/6/6b/Harlequin2.jpg/revision/latest?cb=20210528135120"},
+    {name:"Scrapper",rarity:"legendary",tier:"A",icon:"🔧",role:"support",img:""},
+    {name:"Sea Dog",rarity:"legendary",tier:"A",icon:"🐕",role:"dps",img:"https://rushroyale.my.games/uploads/images/pirate-2-pawn-icon-6580144f51362.png"},
+    {name:"Gunslinger",rarity:"legendary",tier:"A",icon:"🔫",role:"dps",img:""},
+    {name:"Cultist",rarity:"legendary",tier:"A",icon:"🔮",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/0/01/Cultist_Card.png/revision/latest?cb=20221004105508"},
+    {name:"Blade Dancer",rarity:"legendary",tier:"A",icon:"💃",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/8/88/Blade_Dancer_Card.jpg/revision/latest?cb=20221004094221"},
+    {name:"Robot",rarity:"legendary",tier:"A",icon:"🤖",role:"dps",img:""},
+    {name:"Inquisitor",rarity:"legendary",tier:"B",icon:"⚡",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/7/79/Inquisitor2.jpg/revision/latest?cb=20210528134006"},
+    {name:"Bruiser",rarity:"legendary",tier:"B",icon:"👊",role:"dps",img:"https://rushroyale.my.games/uploads/images/fanatic-big-icon-1-658014848639b.png"},
+    {name:"Minotaur",rarity:"legendary",tier:"B",icon:"🐂",role:"support",img:"https://rushroyale.my.games/uploads/images/280213903-496913855512196-4302079310458277221-n-628b4e84b3065.jpg"},
+    {name:"Tesla",rarity:"legendary",tier:"B",icon:"🔋",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/0/07/Schermafbeelding_2025-05-15_194306.png/revision/latest?cb=20250515174334"},
+    {name:"Boreas",rarity:"legendary",tier:"C",icon:"❄️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/3/31/Boreas2.jpg/revision/latest?cb=20210528134046"},
+    {name:"Shaman",rarity:"legendary",tier:"C",icon:"🪶",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a4/Shaman2.jpg/revision/latest?cb=20210528135041"},
+    {name:"Demonologist",rarity:"legendary",tier:"C",icon:"📖",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/e/e1/Demonologist2.jpg/revision/latest?cb=20210528134939"},
+    {name:"Stasis",rarity:"legendary",tier:"C",icon:"⏸️",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/9/9a/Stasis2.5.jpg/revision/latest?cb=20210528134313"},
+    {name:"Clock of Power",rarity:"legendary",tier:"C",icon:"🕐",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/4/42/ClockOfPower2.jpg/revision/latest?cb=20210528134613"},
+    {name:"Hex",rarity:"legendary",tier:"C",icon:"✡️",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/5/59/Hex2.jpg/revision/latest?cb=20210528134517"},
+    {name:"Frost",rarity:"legendary",tier:"B",icon:"🥶",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/9/97/Frost2.jpg/revision/latest?cb=20210528134217"},
+    {name:"Trapper",rarity:"legendary",tier:"B",icon:"🪤",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a8/Trapper2.5.jpg/revision/latest?cb=20210528134356"},
     // EPIC (15 cards)
-    {name:"Crystalmancer",rarity:"epic",tier:"B",icon:"💎",role:"dps"},
-    {name:"Vampire",rarity:"epic",tier:"B",icon:"🧛",role:"support"},
-    {name:"Executioner",rarity:"epic",tier:"B",icon:"🪓",role:"dps"},
-    {name:"Mime",rarity:"epic",tier:"B",icon:"🎭",role:"support"},
-    {name:"Engineer",rarity:"epic",tier:"B",icon:"⚙️",role:"dps"},
-    {name:"Portal Keeper",rarity:"epic",tier:"B",icon:"🚪",role:"support"},
-    {name:"Portal Mage",rarity:"epic",tier:"B",icon:"🌀",role:"support"},
-    {name:"Reaper",rarity:"epic",tier:"B",icon:"💀",role:"dps"},
-    {name:"Gargoyle",rarity:"epic",tier:"C",icon:"🗽",role:"dps"},
-    {name:"Plague Doctor",rarity:"epic",tier:"C",icon:"🩺",role:"dps"},
-    {name:"Wind Archer",rarity:"epic",tier:"C",icon:"🏹",role:"dps"},
-    {name:"Thunderer",rarity:"epic",tier:"C",icon:"⛈️",role:"dps"},
-    {name:"Ivy",rarity:"epic",tier:"B",icon:"🌱",role:"support"},
-    {name:"Catapult",rarity:"epic",tier:"C",icon:"🏗️",role:"dps"},
-    {name:"Pyrotechnic",rarity:"epic",tier:"C",icon:"🎆",role:"dps"},
+    {name:"Crystalmancer",rarity:"epic",tier:"B",icon:"💎",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a8/CrystalmancerNew.jpg/revision/latest?cb=20221125072929"},
+    {name:"Vampire",rarity:"epic",tier:"B",icon:"🧛",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a8/VampireNew.jpg/revision/latest?cb=20221125073417"},
+    {name:"Executioner",rarity:"epic",tier:"B",icon:"🪓",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/1/13/ExecutionerNew.jpg/revision/latest?cb=20221125073040"},
+    {name:"Mime",rarity:"epic",tier:"B",icon:"🎭",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/5/5f/MimeNew.jpg/revision/latest?cb=20221125073108"},
+    {name:"Engineer",rarity:"epic",tier:"B",icon:"⚙️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/6/6a/EngineerNew.jpg/revision/latest?cb=20221125072950"},
+    {name:"Portal Keeper",rarity:"epic",tier:"B",icon:"🚪",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/1/1a/Portal_KeeperNew.jpg/revision/latest?cb=20221125073236"},
+    {name:"Portal Mage",rarity:"epic",tier:"B",icon:"🌀",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/c/cf/Portal_MageNew.jpg/revision/latest?cb=20221125073339"},
+    {name:"Reaper",rarity:"epic",tier:"B",icon:"💀",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/2/2c/ReaperNew.jpg/revision/latest?cb=20221125073320"},
+    {name:"Gargoyle",rarity:"epic",tier:"C",icon:"🗽",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/e/e9/GargoyleNew.jpg/revision/latest?cb=20221125073009"},
+    {name:"Plague Doctor",rarity:"epic",tier:"C",icon:"🩺",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/6/68/Plague_DoctorNew.jpg/revision/latest?cb=20221125073138"},
+    {name:"Wind Archer",rarity:"epic",tier:"C",icon:"🏹",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/6/6a/Wind_ArcherNew.jpg/revision/latest?cb=20221125073435"},
+    {name:"Thunderer",rarity:"epic",tier:"C",icon:"⛈️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/e/e3/ThundererNew.jpg/revision/latest?cb=20221125073358"},
+    {name:"Ivy",rarity:"epic",tier:"B",icon:"🌱",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/0/01/IvyNew.jpg/revision/latest?cb=20221125073159"},
+    {name:"Catapult",rarity:"epic",tier:"C",icon:"🏗️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/a/aa/CatapultNew.jpg/revision/latest?cb=20221125072904"},
+    {name:"Pyrotechnic",rarity:"epic",tier:"C",icon:"🎆",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/b/b5/PyrotecnicNew.jpg/revision/latest?cb=20221125073301"},
     // RARE (9 cards)
-    {name:"Chemist",rarity:"rare",tier:"A",icon:"🧪",role:"support"},
-    {name:"Alchemist",rarity:"rare",tier:"B",icon:"⚗️",role:"support"},
-    {name:"Banner",rarity:"rare",tier:"B",icon:"🚩",role:"support"},
-    {name:"Grindstone",rarity:"rare",tier:"B",icon:"🪨",role:"support"},
-    {name:"Zealot",rarity:"rare",tier:"B",icon:"🙏",role:"dps"},
-    {name:"Magic Cauldron",rarity:"rare",tier:"B",icon:"🍵",role:"support"},
-    {name:"Priestess",rarity:"rare",tier:"C",icon:"⛪",role:"support"},
-    {name:"Sharpshooter",rarity:"rare",tier:"C",icon:"🎯",role:"dps"},
-    {name:"Sentry",rarity:"rare",tier:"D",icon:"🛡️",role:"dps"},
+    {name:"Chemist",rarity:"rare",tier:"A",icon:"🧪",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/3/39/ChemistRR.webp/revision/latest?cb=20260108142708"},
+    {name:"Alchemist",rarity:"rare",tier:"B",icon:"⚗️",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/4/4b/AlchemistNew1.webp/revision/latest?cb=20260108141641"},
+    {name:"Banner",rarity:"rare",tier:"B",icon:"🚩",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/3/38/BannerNew1.webp/revision/latest?cb=20260108141641"},
+    {name:"Grindstone",rarity:"rare",tier:"B",icon:"🪨",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/2/2a/Grindstone_RR.webp/revision/latest?cb=20260108142707"},
+    {name:"Zealot",rarity:"rare",tier:"B",icon:"🙏",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/4/4a/Zealot_RR.webp/revision/latest?cb=20260108142415"},
+    {name:"Magic Cauldron",rarity:"rare",tier:"B",icon:"🍵",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/9/97/Magic_CauldronNew1.webp/revision/latest?cb=20260108141640"},
+    {name:"Priestess",rarity:"rare",tier:"C",icon:"⛪",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/b/bb/Priestess_RR.webp/revision/latest?cb=20260108142416"},
+    {name:"Sharpshooter",rarity:"rare",tier:"C",icon:"🎯",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/1/18/Sharpshooter_RR.webp/revision/latest?cb=20260108142416"},
+    {name:"Sentry",rarity:"rare",tier:"D",icon:"🛡️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/8/83/Sentry_RR.webp/revision/latest?cb=20260108142416"},
     // COMMON (9 cards)
-    {name:"Archer",rarity:"common",tier:"D",icon:"🏹",role:"dps"},
-    {name:"Fire Mage",rarity:"common",tier:"D",icon:"🔥",role:"dps"},
-    {name:"Cold Mage",rarity:"common",tier:"D",icon:"❄️",role:"support"},
-    {name:"Lightning Mage",rarity:"common",tier:"D",icon:"⚡",role:"dps"},
-    {name:"Thrower",rarity:"common",tier:"D",icon:"🪃",role:"dps"},
-    {name:"Poisoner",rarity:"common",tier:"D",icon:"☠️",role:"dps"},
-    {name:"Hunter",rarity:"common",tier:"D",icon:"🏹",role:"dps"},
-    {name:"Bombardier",rarity:"common",tier:"D",icon:"💣",role:"dps"},
-    {name:"Rogue",rarity:"common",tier:"D",icon:"🗡️",role:"dps"},
+    {name:"Archer",rarity:"common",tier:"D",icon:"🏹",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/d/db/Archer-nobg.png/revision/latest?cb=20230810091427"},
+    {name:"Fire Mage",rarity:"common",tier:"D",icon:"🔥",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a4/Fire_MageNew.jpg/revision/latest?cb=20221122041157"},
+    {name:"Cold Mage",rarity:"common",tier:"D",icon:"❄️",role:"support",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a6/Cold_MageNew.jpg/revision/latest?cb=20221122035204"},
+    {name:"Lightning Mage",rarity:"common",tier:"D",icon:"⚡",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/8/8f/Lightning_MageNew.jpg/revision/latest?cb=20221122043858"},
+    {name:"Thrower",rarity:"common",tier:"D",icon:"🪃",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/6/60/ThrowerNew.jpg/revision/latest?cb=20221122052415"},
+    {name:"Poisoner",rarity:"common",tier:"D",icon:"☠️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/0/08/PoisonerNew.jpg/revision/latest?cb=20221122044715"},
+    {name:"Hunter",rarity:"common",tier:"D",icon:"🏹",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/c/c2/HunterNew.jpg/revision/latest?cb=20221122042638"},
+    {name:"Bombardier",rarity:"common",tier:"D",icon:"💣",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/a/a5/BombardierNew.jpg/revision/latest?cb=20221122034207"},
+    {name:"Rogue",rarity:"common",tier:"D",icon:"🗡️",role:"dps",img:"https://static.wikia.nocookie.net/rushroyale/images/4/40/RogueNew.jpg/revision/latest?cb=20221122051154"},
 ];
 
 // Remove duplicate Spirit Master
@@ -265,7 +266,7 @@ function renderCards() {
     grid.innerHTML = filtered.map(u => `
         <div class="card rarity-${u.rarity} ${selectedCards.has(u.name) ? 'selected' : ''}" onclick="toggleCard('${u.name}')">
             <div class="check">✓</div>
-            <div class="card-icon">${u.icon}</div>
+            <div class="card-icon">${u.img ? `<img src="${u.img}" alt="${u.name}" onerror="this.parentElement.innerHTML='${u.icon}'">` : u.icon}</div>
             <div class="card-name">${u.name}</div>
             <div class="card-tier tier-${u.tier}">${u.tier}</div>
         </div>
@@ -345,8 +346,8 @@ function findDecks() {
                 const unit = uniqueUnits.find(u => u.name === cName);
                 const isMissing = d.missing.includes(cName);
                 return `<div class="deck-card-item" style="${isMissing ? 'opacity:0.3' : ''}">
-                    <div class="card-icon rarity-${unit ? unit.rarity : 'common'}" style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:${unit ? '' : '#333'}">
-                        ${unit ? unit.icon : '?'}
+                    <div class="card-icon rarity-${unit ? unit.rarity : 'common'}" style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;background:${unit ? '' : '#333'}">
+                        ${unit && unit.img ? '<img src="' + unit.img + '" alt="' + cName + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML=\'' + (unit ? unit.icon : '?') + '\'">' : (unit ? unit.icon : '?')}
                     </div>
                     <div class="card-name">${cName}${isMissing ? ' ❌' : ''}</div>
                 </div>`;
