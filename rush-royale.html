@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rush Royale - Deck Builder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a0e1a; color: #fff; min-height: 100vh; }
+
+        header { background: linear-gradient(135deg, #1a1a3e, #2d1b69); padding: 20px; text-align: center; border-bottom: 3px solid #f39c12; }
+        header h1 { font-size: 2em; color: #f39c12; text-shadow: 0 0 20px rgba(243,156,18,0.5); }
+        header p { color: #aaa; margin-top: 5px; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { padding: 10px 20px; background: #1a1f35; border: 2px solid #333; border-radius: 8px; cursor: pointer; font-size: 1em; color: #ccc; transition: all 0.3s; }
+        .tab:hover { border-color: #f39c12; color: #f39c12; }
+        .tab.active { background: #f39c12; color: #000; border-color: #f39c12; font-weight: bold; }
+
+        /* Filter */
+        .filters { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+        .filter-btn { padding: 6px 14px; border-radius: 20px; border: 2px solid #555; background: transparent; color: #ccc; cursor: pointer; font-size: 0.85em; transition: all 0.3s; }
+        .filter-btn:hover { border-color: #f39c12; }
+        .filter-btn.active { background: #f39c12; color: #000; border-color: #f39c12; }
+        .search-box { padding: 8px 14px; border-radius: 20px; border: 2px solid #555; background: #111; color: #fff; font-size: 0.9em; width: 200px; }
+
+        /* Cards Grid */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 30px; }
+
+        .card { position: relative; border-radius: 10px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.3s; border: 3px solid transparent; user-select: none; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .card.selected { border-color: #2ecc71; box-shadow: 0 0 15px rgba(46,204,113,0.5); }
+        .card .check { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; background: #2ecc71; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 12px; }
+        .card.selected .check { display: flex; }
+
+        .card-icon { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; }
+        .card-name { font-size: 0.7em; line-height: 1.2; }
+        .card-tier { font-size: 0.6em; margin-top: 2px; padding: 1px 6px; border-radius: 8px; display: inline-block; }
+
+        /* Rarities */
+        .rarity-common .card-icon { background: linear-gradient(135deg, #636e72, #b2bec3); }
+        .rarity-common { background: rgba(99,110,114,0.2); }
+        .rarity-rare .card-icon { background: linear-gradient(135deg, #0984e3, #74b9ff); }
+        .rarity-rare { background: rgba(9,132,227,0.2); }
+        .rarity-epic .card-icon { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+        .rarity-epic { background: rgba(108,92,231,0.2); }
+        .rarity-legendary .card-icon { background: linear-gradient(135deg, #f39c12, #fdcb6e); }
+        .rarity-legendary { background: rgba(243,156,18,0.2); }
+
+        /* Tiers */
+        .tier-S { background: #e74c3c; color: #fff; }
+        .tier-A { background: #e67e22; color: #fff; }
+        .tier-B { background: #3498db; color: #fff; }
+        .tier-C { background: #636e72; color: #fff; }
+        .tier-D { background: #2d3436; color: #aaa; }
+
+        /* Selected counter */
+        .selected-bar { position: sticky; top: 0; z-index: 100; background: linear-gradient(135deg, #1a1a3e, #2d1b69); padding: 12px 20px; border-radius: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
+        .selected-count { color: #2ecc71; font-weight: bold; font-size: 1.1em; }
+        .btn { padding: 10px 25px; border: none; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+        .btn-primary { background: #f39c12; color: #000; }
+        .btn-primary:hover { background: #e67e22; }
+        .btn-danger { background: #e74c3c; color: #fff; font-size: 0.85em; padding: 8px 15px; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* Decks results */
+        .decks-section { display: none; }
+        .decks-section.visible { display: block; }
+        .deck-result { background: #1a1f35; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #f39c12; }
+        .deck-result h3 { color: #f39c12; margin-bottom: 5px; }
+        .deck-result .deck-meta { font-size: 0.85em; color: #888; margin-bottom: 12px; }
+        .deck-cards { display: flex; gap: 10px; flex-wrap: wrap; }
+        .deck-card-item { text-align: center; width: 80px; }
+        .deck-card-item .card-icon { width: 50px; height: 50px; font-size: 18px; margin: 0 auto 4px; }
+        .deck-card-item .card-name { font-size: 0.7em; }
+        .deck-score { float: right; background: #2ecc71; color: #000; padding: 4px 12px; border-radius: 15px; font-weight: bold; font-size: 0.85em; }
+        .no-decks { text-align: center; color: #888; padding: 40px; }
+
+        .section-title { font-size: 1.4em; margin-bottom: 15px; color: #f39c12; border-bottom: 2px solid #333; padding-bottom: 8px; }
+
+        /* Select all btns */
+        .select-actions { display: flex; gap: 8px; }
+
+        @media (max-width: 600px) {
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; }
+            header h1 { font-size: 1.4em; }
+            .selected-bar { flex-direction: column; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚔️ Rush Royale Deck Builder</h1>
+        <p>Selecciona las cartas que tienes y encuentra los mejores mazos</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('select')">📋 Seleccionar Cartas</div>
+            <div class="tab" onclick="showTab('decks')">🏆 Mejores Mazos</div>
+        </div>
+
+        <div id="tab-select">
+            <div class="selected-bar">
+                <div>
+                    <span class="selected-count" id="selectedCount">0 cartas seleccionadas</span>
+                </div>
+                <div class="select-actions">
+                    <button class="btn btn-danger" onclick="clearAll()">Limpiar</button>
+                    <button class="btn btn-primary" onclick="findDecks()" id="findBtn" disabled>🔍 Buscar Mazos</button>
+                </div>
+            </div>
+
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterRarity('all', this)">Todas</button>
+                <button class="filter-btn" onclick="filterRarity('legendary', this)">⭐ Legendaria</button>
+                <button class="filter-btn" onclick="filterRarity('epic', this)">💜 Épica</button>
+                <button class="filter-btn" onclick="filterRarity('rare', this)">💙 Rara</button>
+                <button class="filter-btn" onclick="filterRarity('common', this)">⬜ Común</button>
+                <input type="text" class="search-box" placeholder="🔍 Buscar carta..." oninput="searchCards(this.value)">
+            </div>
+
+            <div class="cards-grid" id="cardsGrid"></div>
+        </div>
+
+        <div id="tab-decks" class="decks-section">
+            <h2 class="section-title">🏆 Mazos Recomendados</h2>
+            <div id="decksResults"></div>
+        </div>
+    </div>
+
+<script>
+// === DATA ===
+const units = [
+    // LEGENDARY
+    {name:"Corsair",rarity:"legendary",tier:"S",icon:"🏴‍☠️",role:"dps"},
+    {name:"Spirit Master",rarity:"legendary",tier:"S",icon:"👻",role:"dps"},
+    {name:"Knight Statue",rarity:"legendary",tier:"S",icon:"🗿",role:"support"},
+    {name:"Witch",rarity:"legendary",tier:"S",icon:"🧙‍♀️",role:"support"},
+    {name:"Meteor",rarity:"legendary",tier:"S",icon:"☄️",role:"dps"},
+    {name:"Enchanted Sword",rarity:"legendary",tier:"S",icon:"⚔️",role:"dps"},
+    {name:"Treant",rarity:"legendary",tier:"S",icon:"🌳",role:"dps"},
+    {name:"Bard",rarity:"legendary",tier:"S",icon:"🎵",role:"support"},
+    {name:"Monk",rarity:"legendary",tier:"S",icon:"🧘",role:"support"},
+    {name:"Genie",rarity:"legendary",tier:"S",icon:"🧞",role:"dps"},
+    {name:"Dryad",rarity:"legendary",tier:"S",icon:"🌿",role:"support"},
+    {name:"Demon Hunter",rarity:"legendary",tier:"A",icon:"😈",role:"dps"},
+    {name:"Spirit Master",rarity:"legendary",tier:"A",icon:"👻",role:"dps"},
+    {name:"Summoner",rarity:"legendary",tier:"A",icon:"📜",role:"support"},
+    {name:"Harlequin",rarity:"legendary",tier:"A",icon:"🃏",role:"support"},
+    {name:"Scrapper",rarity:"legendary",tier:"A",icon:"🔧",role:"support"},
+    {name:"Sea Dog",rarity:"legendary",tier:"A",icon:"🐕",role:"dps"},
+    {name:"Gunslinger",rarity:"legendary",tier:"A",icon:"🔫",role:"dps"},
+    {name:"Cultist",rarity:"legendary",tier:"A",icon:"🔮",role:"dps"},
+    {name:"Blade Dancer",rarity:"legendary",tier:"A",icon:"💃",role:"dps"},
+    {name:"Robot",rarity:"legendary",tier:"A",icon:"🤖",role:"dps"},
+    {name:"Portal Mage",rarity:"legendary",tier:"A",icon:"🌀",role:"support"},
+    {name:"Inquisitor",rarity:"legendary",tier:"B",icon:"⚡",role:"dps"},
+    {name:"Bruiser",rarity:"legendary",tier:"B",icon:"👊",role:"dps"},
+    {name:"Minotaur",rarity:"legendary",tier:"B",icon:"🐂",role:"dps"},
+    {name:"Engineer",rarity:"legendary",tier:"B",icon:"⚙️",role:"dps"},
+    {name:"Crystalmancer",rarity:"legendary",tier:"B",icon:"💎",role:"dps"},
+    {name:"Tesla",rarity:"legendary",tier:"B",icon:"⚡",role:"dps"},
+    {name:"Mime",rarity:"legendary",tier:"B",icon:"🎭",role:"support"},
+    {name:"Vampire",rarity:"legendary",tier:"B",icon:"🧛",role:"dps"},
+    {name:"Executioner",rarity:"legendary",tier:"B",icon:"🪓",role:"dps"},
+    {name:"Banshee",rarity:"legendary",tier:"B",icon:"👻",role:"dps"},
+    {name:"Portal Keeper",rarity:"legendary",tier:"B",icon:"🚪",role:"support"},
+    {name:"Reaper",rarity:"legendary",tier:"B",icon:"💀",role:"dps"},
+    {name:"Gargoyle",rarity:"legendary",tier:"C",icon:"🗽",role:"dps"},
+    {name:"Hex",rarity:"legendary",tier:"C",icon:"✡️",role:"support"},
+    {name:"Boreas",rarity:"legendary",tier:"C",icon:"❄️",role:"dps"},
+    {name:"Shaman",rarity:"legendary",tier:"C",icon:"🪶",role:"support"},
+    {name:"Demonologist",rarity:"legendary",tier:"C",icon:"📖",role:"dps"},
+    {name:"Stasis",rarity:"legendary",tier:"C",icon:"⏸️",role:"support"},
+    {name:"Clock of Power",rarity:"legendary",tier:"C",icon:"🕐",role:"support"},
+    // EPIC
+    {name:"Chemist",rarity:"epic",tier:"A",icon:"🧪",role:"support"},
+    {name:"Frost Elemental",rarity:"epic",tier:"A",icon:"🧊",role:"support"},
+    {name:"Alchemist",rarity:"epic",tier:"B",icon:"⚗️",role:"support"},
+    {name:"Trapper",rarity:"epic",tier:"B",icon:"🪤",role:"support"},
+    {name:"Banner",rarity:"epic",tier:"B",icon:"🚩",role:"support"},
+    {name:"Grindstone",rarity:"epic",tier:"B",icon:"🪨",role:"support"},
+    {name:"Zealot",rarity:"epic",tier:"B",icon:"🙏",role:"dps"},
+    {name:"Ivy",rarity:"epic",tier:"B",icon:"🌱",role:"support"},
+    {name:"Frost",rarity:"epic",tier:"C",icon:"❄️",role:"support"},
+    {name:"Plague Doctor",rarity:"epic",tier:"C",icon:"🎭",role:"dps"},
+    {name:"Earth Elemental",rarity:"epic",tier:"C",icon:"🌍",role:"dps"},
+    {name:"Magic Cauldron",rarity:"epic",tier:"C",icon:"🍵",role:"support"},
+    {name:"Wind Archer",rarity:"epic",tier:"C",icon:"🏹",role:"dps"},
+    {name:"Sharpshooter",rarity:"epic",tier:"C",icon:"🎯",role:"dps"},
+    {name:"Thunderer",rarity:"epic",tier:"C",icon:"⛈️",role:"dps"},
+    {name:"Rogue",rarity:"epic",tier:"C",icon:"🗡️",role:"dps"},
+    {name:"Clown",rarity:"epic",tier:"B",icon:"🤡",role:"support"},
+    {name:"Red Riding Hood",rarity:"epic",tier:"C",icon:"🧣",role:"dps"},
+    // RARE
+    {name:"Priestess",rarity:"rare",tier:"C",icon:"⛪",role:"support"},
+    {name:"Hunter",rarity:"rare",tier:"C",icon:"🏹",role:"dps"},
+    {name:"Bombardier",rarity:"rare",tier:"C",icon:"💣",role:"dps"},
+    {name:"Catapult",rarity:"rare",tier:"D",icon:"🏗️",role:"dps"},
+    {name:"Pyrotechnic",rarity:"rare",tier:"D",icon:"🎆",role:"dps"},
+    {name:"Sentry",rarity:"rare",tier:"D",icon:"🛡️",role:"dps"},
+    {name:"Ice Mage",rarity:"rare",tier:"D",icon:"🧊",role:"support"},
+    // COMMON
+    {name:"Archer",rarity:"common",tier:"D",icon:"🏹",role:"dps"},
+    {name:"Fire Mage",rarity:"common",tier:"D",icon:"🔥",role:"dps"},
+    {name:"Cold Mage",rarity:"common",tier:"D",icon:"❄️",role:"support"},
+    {name:"Lightning Mage",rarity:"common",tier:"D",icon:"⚡",role:"dps"},
+    {name:"Thrower",rarity:"common",tier:"D",icon:"🪃",role:"dps"},
+    {name:"Poisoner",rarity:"common",tier:"D",icon:"☠️",role:"dps"},
+];
+
+// Remove duplicate Spirit Master
+const seen = new Set();
+const uniqueUnits = units.filter(u => {
+    if (seen.has(u.name)) return false;
+    seen.add(u.name);
+    return true;
+});
+
+// === META DECKS ===
+const metaDecks = [
+    {name:"Genie Control", cards:["Genie","Bruiser","Enchanted Sword","Harlequin","Dryad"], tier:"S", type:"PvP", trophies:"9200+"},
+    {name:"Spirit Master DPS", cards:["Spirit Master","Dryad","Scrapper","Knight Statue","Harlequin"], tier:"S", type:"PvP", trophies:"8000+"},
+    {name:"Demon Hunter Assault", cards:["Demon Hunter","Dryad","Harlequin","Enchanted Sword","Knight Statue"], tier:"S", type:"PvP", trophies:"8000+"},
+    {name:"Corsair Aggro", cards:["Corsair","Dryad","Harlequin","Knight Statue","Scrapper"], tier:"S", type:"PvP", trophies:"8000+"},
+    {name:"Treant Power", cards:["Treant","Dryad","Harlequin","Knight Statue","Summoner"], tier:"S", type:"PvP", trophies:"7500+"},
+    {name:"Blade Dancer Flow", cards:["Blade Dancer","Dryad","Harlequin","Summoner","Knight Statue"], tier:"A", type:"PvP", trophies:"7000+"},
+    {name:"Inquisitor Burst", cards:["Inquisitor","Harlequin","Summoner","Mime","Knight Statue"], tier:"A", type:"PvP", trophies:"7000+"},
+    {name:"Inquisitor Cold", cards:["Inquisitor","Mime","Cold Mage","Harlequin","Summoner"], tier:"A", type:"PvP", trophies:"6500+"},
+    {name:"Shaman Disruptor", cards:["Shaman","Harlequin","Summoner","Mime","Knight Statue"], tier:"A", type:"PvP", trophies:"6500+"},
+    {name:"Cultist Circle", cards:["Cultist","Harlequin","Dryad","Summoner","Knight Statue"], tier:"A", type:"PvP", trophies:"6500+"},
+    {name:"Robot Clock", cards:["Robot","Clock of Power","Frost","Harlequin","Summoner"], tier:"A", type:"PvP", trophies:"6000+"},
+    {name:"Engineer Chain", cards:["Engineer","Harlequin","Mime","Chemist","Bombardier"], tier:"B", type:"PvP F2P", trophies:"5000+"},
+    {name:"Riding Hood Stack", cards:["Red Riding Hood","Summoner","Harlequin","Dryad","Knight Statue"], tier:"B", type:"PvP", trophies:"5000+"},
+    {name:"Harlequin Trapper", cards:["Harlequin","Magic Cauldron","Dryad","Bard","Trapper"], tier:"B", type:"PvP", trophies:"5000+"},
+    {name:"Wind Archer Control", cards:["Wind Archer","Ice Mage","Vampire","Chemist","Plague Doctor"], tier:"B", type:"PvP", trophies:"4500+"},
+    {name:"La Meule (Boreas)", cards:["Boreas","Grindstone","Dryad","Harlequin","Executioner"], tier:"B", type:"PvP", trophies:"3500+"},
+    {name:"Zealot Co-op", cards:["Harlequin","Zealot","Grindstone","Dryad","Ice Mage"], tier:"A", type:"Co-op", trophies:""},
+    {name:"Zealot Chemist Co-op", cards:["Harlequin","Zealot","Chemist","Magic Cauldron","Ice Mage"], tier:"A", type:"Co-op", trophies:""},
+    {name:"Reaper Intermedio", cards:["Reaper","Priestess","Engineer","Lightning Mage","Hunter"], tier:"C", type:"PvP", trophies:"2000+"},
+    {name:"Principiante", cards:["Archer","Hunter","Alchemist","Reaper","Priestess"], tier:"C", type:"PvP", trophies:"1000+"},
+    {name:"Gatekeeper Support", cards:["Portal Keeper","Dryad","Priestess","Engineer","Chemist"], tier:"B", type:"PvP", trophies:"3000+"},
+    {name:"Bruiser Smash", cards:["Bruiser","Dryad","Harlequin","Knight Statue","Mime"], tier:"A", type:"PvP", trophies:"7000+"},
+    {name:"Meteor Rain", cards:["Meteor","Dryad","Harlequin","Scrapper","Knight Statue"], tier:"S", type:"PvP", trophies:"7500+"},
+    {name:"Monk Zen", cards:["Monk","Dryad","Harlequin","Knight Statue","Summoner"], tier:"A", type:"PvP", trophies:"6500+"},
+];
+
+// === STATE ===
+let selectedCards = new Set();
+let currentFilter = 'all';
+let searchTerm = '';
+
+// === RENDER ===
+function renderCards() {
+    const grid = document.getElementById('cardsGrid');
+    let filtered = uniqueUnits.filter(u => {
+        if (currentFilter !== 'all' && u.rarity !== currentFilter) return false;
+        if (searchTerm && !u.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+        return true;
+    });
+
+    // Sort: by tier (S first), then by rarity
+    const tierOrder = {S:0, A:1, B:2, C:3, D:4};
+    const rarityOrder = {legendary:0, epic:1, rare:2, common:3};
+    filtered.sort((a,b) => tierOrder[a.tier] - tierOrder[b.tier] || rarityOrder[a.rarity] - rarityOrder[b.rarity]);
+
+    grid.innerHTML = filtered.map(u => `
+        <div class="card rarity-${u.rarity} ${selectedCards.has(u.name) ? 'selected' : ''}" onclick="toggleCard('${u.name}')">
+            <div class="check">✓</div>
+            <div class="card-icon">${u.icon}</div>
+            <div class="card-name">${u.name}</div>
+            <div class="card-tier tier-${u.tier}">${u.tier}</div>
+        </div>
+    `).join('');
+
+    updateCounter();
+}
+
+function toggleCard(name) {
+    if (selectedCards.has(name)) selectedCards.delete(name);
+    else selectedCards.add(name);
+    renderCards();
+}
+
+function updateCounter() {
+    const count = selectedCards.size;
+    document.getElementById('selectedCount').textContent = `${count} carta${count !== 1 ? 's' : ''} seleccionada${count !== 1 ? 's' : ''}`;
+    document.getElementById('findBtn').disabled = count < 5;
+}
+
+function clearAll() {
+    selectedCards.clear();
+    renderCards();
+}
+
+function filterRarity(rarity, btn) {
+    currentFilter = rarity;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCards();
+}
+
+function searchCards(term) {
+    searchTerm = term;
+    renderCards();
+}
+
+function showTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    if (tab === 'select') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('tab-select').style.display = 'block';
+        document.getElementById('tab-decks').style.display = 'none';
+    } else {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('tab-select').style.display = 'none';
+        document.getElementById('tab-decks').style.display = 'block';
+        document.getElementById('tab-decks').classList.add('visible');
+    }
+}
+
+// === DECK FINDER ===
+function findDecks() {
+    const results = [];
+
+    metaDecks.forEach(deck => {
+        const owned = deck.cards.filter(c => selectedCards.has(c));
+        const missing = deck.cards.filter(c => !selectedCards.has(c));
+        const matchPct = Math.round((owned.length / deck.cards.length) * 100);
+
+        if (owned.length >= 3) { // At least 3 of 5 cards
+            results.push({...deck, owned, missing, matchPct});
+        }
+    });
+
+    // Sort by match %, then by tier
+    const tierVal = {S:4, A:3, B:2, C:1, D:0};
+    results.sort((a,b) => b.matchPct - a.matchPct || tierVal[b.tier] - tierVal[a.tier]);
+
+    const container = document.getElementById('decksResults');
+
+    if (results.length === 0) {
+        container.innerHTML = '<div class="no-decks">😕 No se encontraron mazos con tus cartas.<br>Intenta seleccionar más cartas, especialmente Legendarias como Harlequin, Dryad o Knight Statue.</div>';
+    } else {
+        container.innerHTML = results.map(d => {
+            const cardHtml = d.cards.map(cName => {
+                const unit = uniqueUnits.find(u => u.name === cName);
+                const isMissing = d.missing.includes(cName);
+                return `<div class="deck-card-item" style="${isMissing ? 'opacity:0.3' : ''}">
+                    <div class="card-icon rarity-${unit ? unit.rarity : 'common'}" style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:${unit ? '' : '#333'}">
+                        ${unit ? unit.icon : '?'}
+                    </div>
+                    <div class="card-name">${cName}${isMissing ? ' ❌' : ''}</div>
+                </div>`;
+            }).join('');
+
+            return `<div class="deck-result">
+                <span class="deck-score">${d.matchPct}% match</span>
+                <h3>${d.name}</h3>
+                <div class="deck-meta">
+                    <span class="card-tier tier-${d.tier}" style="margin-right:8px">Tier ${d.tier}</span>
+                    ${d.type} ${d.trophies ? '• ' + d.trophies + ' trofeos' : ''}
+                    ${d.missing.length > 0 ? ' • Te faltan: ' + d.missing.join(', ') : ' • ¡Mazo completo! ✅'}
+                </div>
+                <div class="deck-cards">${cardHtml}</div>
+            </div>`;
+        }).join('');
+    }
+
+    showTab('decks');
+}
+
+// === INIT ===
+renderCards();
+</script>
+</body>
+</html>
