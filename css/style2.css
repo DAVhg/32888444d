@@ -614,7 +614,7 @@ p {
   .menu-view.mobile {
     display: block;
     width: 100%;
-    background-color: #fff;
+    background-color: #000000;
     z-index: 4; }
   .menu-view .menu-btn {
     margin-top: 15px;
@@ -1585,7 +1585,7 @@ p {
       padding-right: 0; }
 
   .menu-view.opened {
-    background-color: #fff;
+    background-color: #000;
     width: 100%; }
 
   .menu-view .menu-btn {
