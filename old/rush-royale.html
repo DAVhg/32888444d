@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rush Royale - Deck Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-panel: #1c2333;
+            --bg-hover: #21293a;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --text-dim: #6e7681;
+            --text-bright: #f0f6fc;
+            --gold: #ffa726;
+            --gold-light: #ffcc80;
+            --gold-dark: #e65100;
+            --legendary: #ff8f00;
+            --epic: #aa00ff;
+            --rare: #2979ff;
+            --common: #546e7a;
+            --tier-s: #ff1744;
+            --tier-a: #ff9100;
+            --tier-b: #448aff;
+            --tier-c: #78909c;
+            --tier-d: #455a64;
+            --green: #00e676;
+            --pvp: #ff5252;
+            --coop: #69f0ae;
+            --f2p: #40c4ff;
+            --radius: 8px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Exo 2', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* === HEADER === */
+        .header {
+            background: linear-gradient(180deg, #1a1025 0%, var(--bg-dark) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+        }
+        .header-inner {
+            max-width: 1400px; margin: 0 auto;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 24px;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 12px;
+        }
+        .logo-icon {
+            width: 42px; height: 42px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 800; color: #fff;
+            box-shadow: 0 0 15px rgba(255,167,38,0.3);
+        }
+        .logo-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700; font-size: 1.5em; letter-spacing: 1px;
+        }
+        .logo-text span:first-child { color: var(--gold); }
+        .logo-text span:last-child { color: var(--text-dim); font-weight: 500; }
+        .header-stats {
+            display: flex; gap: 20px; font-size: 0.85em; color: var(--text-dim);
+        }
+        .header-stats strong { color: var(--gold); }
+
+        /* === NAV TABS === */
+        .nav-bar {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-inner {
+            max-width: 1400px; margin: 0 auto;
+            display: flex; gap: 0; padding: 0 24px;
+        }
+        .nav-tab {
+            padding: 14px 28px; cursor: pointer; font-weight: 600; font-size: 0.92em;
+            color: var(--text-dim); border-bottom: 3px solid transparent;
+            transition: all 0.2s; position: relative;
+        }
+        .nav-tab:hover { color: var(--text); background: rgba(255,255,255,0.02); }
+        .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+        .nav-tab .badge {
+            background: var(--gold-dark); color: #fff; font-size: 0.7em;
+            padding: 1px 7px; border-radius: 10px; margin-left: 6px; font-weight: 700;
+        }
+
+        /* === MAIN === */
+        .main { max-width: 1400px; margin: 0 auto; padding: 20px 24px; }
+
+        /* === TOOLBAR (filters + selected bar) === */
+        .toolbar {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 14px 18px; margin-bottom: 16px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .toolbar-right { display: flex; align-items: center; gap: 10px; }
+
+        .pill {
+            padding: 5px 14px; border-radius: 20px; font-size: 0.8em; font-weight: 600;
+            border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+            cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .pill:hover { border-color: var(--gold); color: var(--text); }
+        .pill.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+        .search-input {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85em;
+            border: 1px solid var(--border); background: var(--bg-dark); color: var(--text);
+            width: 180px; transition: border-color 0.2s;
+        }
+        .search-input:focus { outline: none; border-color: var(--gold); }
+        .search-input::placeholder { color: var(--text-dim); }
+
+        .counter { font-weight: 700; color: var(--green); font-size: 0.9em; }
+        .save-ind { color: var(--green); font-size: 0.75em; opacity: 0; transition: opacity 0.4s; margin-left: 6px; }
+        .save-ind.show { opacity: 1; }
+
+        .btn {
+            padding: 8px 20px; border: none; border-radius: var(--radius); font-size: 0.85em;
+            font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit;
+        }
+        .btn-gold { background: linear-gradient(135deg, var(--gold), var(--gold-dark)); color: #fff; }
+        .btn-gold:hover { box-shadow: 0 4px 15px rgba(255,167,38,0.4); transform: translateY(-1px); }
+        .btn-ghost { background: transparent; color: var(--pvp); border: 1px solid rgba(255,82,82,0.3); }
+        .btn-ghost:hover { background: rgba(255,82,82,0.1); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+        /* === CARDS GRID === */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+        }
+
+        .card {
+            position: relative; background: var(--bg-card); border-radius: var(--radius);
+            padding: 10px 4px 8px; text-align: center; cursor: pointer;
+            border: 2px solid var(--border); transition: all 0.2s; user-select: none;
+        }
+        .card:hover { border-color: #555; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+        .card.selected { border-color: var(--green); background: rgba(0,230,118,0.05); }
+        .card .check-mark {
+            position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+            background: var(--green); border-radius: 50%; display: none;
+            align-items: center; justify-content: center; font-size: 11px; color: #000; font-weight: 800;
+        }
+        .card.selected .check-mark { display: flex; }
+
+        .card-img {
+            width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; overflow: hidden; position: relative;
+        }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .card-img::after {
+            content: ''; position: absolute; inset: 0; border-radius: 50%;
+            box-shadow: inset 0 -3px 6px rgba(0,0,0,0.4);
+        }
+
+        /* Rarity ring */
+        .rarity-legendary .card-img { border: 3px solid var(--legendary); box-shadow: 0 0 10px rgba(255,143,0,0.3); }
+        .rarity-epic .card-img { border: 3px solid var(--epic); box-shadow: 0 0 10px rgba(170,0,255,0.2); }
+        .rarity-rare .card-img { border: 3px solid var(--rare); box-shadow: 0 0 10px rgba(41,121,255,0.2); }
+        .rarity-common .card-img { border: 3px solid var(--common); }
+
+        .card-label { font-size: 0.68em; line-height: 1.2; color: var(--text); font-weight: 500; }
+        .tier-badge {
+            display: inline-block; font-size: 0.6em; font-weight: 800; padding: 1px 8px;
+            border-radius: 4px; margin-top: 3px; letter-spacing: 0.5px;
+        }
+        .tier-S { background: var(--tier-s); color: #fff; }
+        .tier-A { background: var(--tier-a); color: #fff; }
+        .tier-B { background: var(--tier-b); color: #fff; }
+        .tier-C { background: var(--tier-c); color: #fff; }
+        .tier-D { background: var(--tier-d); color: #ccc; }
+
+        /* Tooltip */
+        .tip {
+            display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+            background: #1a1f2e; border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 10px 12px; width: 210px; z-index: 200; text-align: left;
+            font-size: 0.72em; line-height: 1.5; pointer-events: none;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.7);
+        }
+        .card:hover .tip { display: block; }
+        .tip-name { color: var(--gold); font-weight: 700; font-size: 1.1em; }
+        .tip-role { color: var(--green); font-size: 0.9em; margin: 2px 0 4px; }
+        .tip-desc { color: var(--text-dim); }
+
+        /* === DECKS SECTION === */
+        .decks-section { display: none; }
+        .decks-section.visible { display: block; }
+
+        .tier-group { margin-bottom: 28px; }
+        .tier-group-head {
+            font-family: 'Rajdhani', sans-serif;
+            display: flex; align-items: center; gap: 10px;
+            font-size: 1.15em; font-weight: 700; padding: 8px 0; margin-bottom: 12px;
+            border-bottom: 1px solid var(--border); color: var(--text);
+        }
+
+        .decks-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 12px;
+        }
+
+        .deck-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+            padding: 16px; transition: all 0.2s; position: relative;
+        }
+        .deck-card:hover { border-color: #444; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .deck-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .deck-name {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.05em; font-weight: 700; color: var(--text-bright);
+        }
+        .deck-match {
+            font-size: 0.78em; font-weight: 700; padding: 3px 10px; border-radius: 4px; white-space: nowrap;
+        }
+        .match-100 { background: rgba(0,230,118,0.15); color: var(--green); }
+        .match-80 { background: rgba(255,167,38,0.15); color: var(--gold); }
+        .match-60 { background: rgba(255,167,38,0.1); color: var(--gold-light); }
+        .match-low { background: rgba(255,82,82,0.1); color: #ff8a80; }
+        .deck-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tag {
+            font-size: 0.7em; font-weight: 600; padding: 2px 10px;
+            border-radius: 4px; letter-spacing: 0.3px;
+        }
+        .tag-pvp { background: rgba(255,82,82,0.12); color: var(--pvp); }
+        .tag-coop { background: rgba(105,240,174,0.12); color: var(--coop); }
+        .tag-f2p { background: rgba(64,196,255,0.12); color: var(--f2p); }
+        .tag-trophies { background: rgba(255,167,38,0.1); color: var(--gold-light); }
+
+        .deck-units { display: flex; gap: 6px; flex-wrap: wrap; }
+        .deck-unit { text-align: center; width: 64px; }
+        .deck-unit .card-img { width: 44px; height: 44px; margin: 0 auto 3px; font-size: 16px; }
+        .deck-unit .card-label { font-size: 0.6em; color: var(--text-dim); }
+        .deck-unit.is-missing { opacity: 0.2; }
+        .deck-unit.is-owned .card-label { color: var(--green); }
+
+        .deck-tip {
+            font-size: 0.75em; color: var(--text-dim); margin-top: 10px;
+            padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.04);
+            line-height: 1.4;
+        }
+
+        .deck-missing-list {
+            font-size: 0.72em; color: #ff8a80; margin-top: 6px;
+        }
+
+        .no-results { text-align: center; color: var(--text-dim); padding: 60px 20px; }
+        .no-results p { margin-top: 8px; font-size: 0.9em; }
+
+        .separator { color: var(--border); margin: 0 4px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        @media (max-width: 700px) {
+            .cards-grid { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 6px; }
+            .decks-grid { grid-template-columns: 1fr; }
+            .header-inner { flex-direction: column; gap: 8px; }
+            .header-stats { display: none; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-left, .toolbar-right { justify-content: center; }
+            .nav-tab { padding: 12px 16px; font-size: 0.85em; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <div class="logo">
+            <div class="logo-icon">RR</div>
+            <div class="logo-text"><span>RUSH ROYALE</span> <span>Deck Builder</span></div>
+        </div>
+        <div class="header-stats">
+            <span><strong id="totalUnits">65</strong> cartas</span>
+            <span><strong id="totalDecks">52</strong> mazos</span>
+        </div>
+    </div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-inner">
+        <div class="nav-tab active" onclick="showTab('select')">Mis Cartas</div>
+        <div class="nav-tab" onclick="showTab('decks')">Mejores Mazos <span class="badge" id="deckBadge">52</span></div>
+    </div>
+</div>
+
+<div class="main">
+    <!-- TAB: Card Selection -->
+    <div id="tab-select">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button class="pill active" data-f="rarity" onclick="fRarity('all',this)">Todas</button>
+                <button class="pill" data-f="rarity" onclick="fRarity('legendary',this)">Legendaria</button>
+                <button class="pill" data-f="rarity" onclick="fRarity('epic',this)">Épica</button>
+                <button class="pill" data-f="rarity" onclick="fRarity('rare',this)">Rara</button>
+                <button class="pill" data-f="rarity" onclick="fRarity('common',this)">Común</button>
+                <span class="separator">|</span>
+                <button class="pill active" data-f="role" onclick="fRole('all',this)">Todos</button>
+                <button class="pill" data-f="role" onclick="fRole('dps',this)">DPS</button>
+                <button class="pill" data-f="role" onclick="fRole('support',this)">Support</button>
+                <input type="text" class="search-input" placeholder="Buscar carta..." oninput="fSearch(this.value)">
+            </div>
+            <div class="toolbar-right">
+                <span class="counter" id="selCount">0 seleccionadas</span>
+                <span class="save-ind" id="saveInd">Guardado</span>
+                <button class="btn btn-ghost" onclick="clearSel()">Limpiar</button>
+                <button class="btn btn-gold" onclick="goToDecks()" id="findBtn" disabled>Buscar Mazos</button>
+            </div>
+        </div>
+        <div class="cards-grid" id="cardsGrid"></div>
+    </div>
+
+    <!-- TAB: Decks -->
+    <div id="tab-decks" class="decks-section">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button class="pill active" data-f="dtype" onclick="fDeck('all',this)">Todos</button>
+                <button class="pill" data-f="dtype" onclick="fDeck('PvP',this)">PvP</button>
+                <button class="pill" data-f="dtype" onclick="fDeck('Co-op',this)">Co-op</button>
+                <button class="pill" data-f="dtype" onclick="fDeck('F2P',this)">F2P</button>
+                <span class="separator">|</span>
+                <button class="pill active" data-f="dtier" onclick="fDTier('all',this)">Todos Tiers</button>
+                <button class="pill" data-f="dtier" onclick="fDTier('S',this)">S</button>
+                <button class="pill" data-f="dtier" onclick="fDTier('A',this)">A</button>
+                <button class="pill" data-f="dtier" onclick="fDTier('B',this)">B</button>
+                <button class="pill" data-f="dtier" onclick="fDTier('C',this)">C</button>
+            </div>
+            <div class="toolbar-right">
+                <span class="counter" id="deckCount">52 mazos</span>
+            </div>
+        </div>
+        <div id="decksOut"></div>
+    </div>
+</div>
+
+<script>
+// === UNITS ===
+const units = [
+    {name:"Corsair",r:"legendary",t:"S",icon:"🏴‍☠️",role:"dps",desc:"Daño en área que aumenta con cada oleada.",img:"images/corsair.png"},
+    {name:"Spirit Master",r:"legendary",t:"S",icon:"👻",role:"dps",desc:"Invoca espíritus. Escala con nivel de merge.",img:"images/spirit-master.png"},
+    {name:"Knight Statue",r:"legendary",t:"S",icon:"🗿",role:"support",desc:"Buff crucial: aumenta daño de unidades adyacentes.",img:"images/knight-statue.png"},
+    {name:"Witch",r:"legendary",t:"S",icon:"🧙‍♀️",role:"support",desc:"Debuffea enemigos reduciendo velocidad y resistencia.",img:"images/witch.png"},
+    {name:"Meteor",r:"legendary",t:"S",icon:"☄️",role:"dps",desc:"Meteoros con daño masivo en área.",img:"images/meteor.png"},
+    {name:"Enchanted Sword",r:"legendary",t:"S",icon:"⚔️",role:"dps",desc:"Espada mágica. Marca enemigos para daño extra.",img:"images/enchanted-sword.png"},
+    {name:"Treant",r:"legendary",t:"S",icon:"🌳",role:"dps",desc:"Crece durante la partida consumiendo unidades.",img:"images/treant.png"},
+    {name:"Bard",r:"legendary",t:"S",icon:"🎵",role:"support",desc:"Acelera velocidad de ataque de adyacentes.",img:"images/bard.png"},
+    {name:"Monk",r:"legendary",t:"S",icon:"🧘",role:"support",desc:"Genera maná extra y buffs defensivos.",img:"images/monk.png"},
+    {name:"Genie",r:"legendary",t:"S",icon:"🧞",role:"dps",desc:"DPS top. Deseos potencian su daño masivamente.",img:"images/genie.webp"},
+    {name:"Dryad",r:"legendary",t:"S",icon:"🌿",role:"support",desc:"Sube nivel de adyacentes al fusionarse. Core meta.",img:"images/dryad.png"},
+    {name:"Demon Hunter",r:"legendary",t:"A",icon:"😈",role:"dps",desc:"Stacks de daño con cada merge. A 40 golpea a todos.",img:"images/demon-hunter.png"},
+    {name:"Summoner",r:"legendary",t:"A",icon:"📜",role:"support",desc:"Invoca unidades aleatorias. Llena campo rápido.",img:"images/summoner.png"},
+    {name:"Harlequin",r:"legendary",t:"A",icon:"🃏",role:"support",desc:"Copia unidad adyacente. Facilita merges y combos.",img:"images/harlequin.png"},
+    {name:"Scrapper",r:"legendary",t:"A",icon:"🔧",role:"support",desc:"Elimina unidades devolviendo maná.",img:"images/scrapper.png"},
+    {name:"Sea Dog",r:"legendary",t:"A",icon:"🐕",role:"dps",desc:"Pirata con cañonazos en área.",img:"images/sea-dog.png"},
+    {name:"Gunslinger",r:"legendary",t:"A",icon:"🔫",role:"dps",desc:"Ráfagas rápidas que atraviesan enemigos.",img:"images/gunslinger.png"},
+    {name:"Cultist",r:"legendary",t:"A",icon:"🔮",role:"dps",desc:"Daño masivo con múltiples cultistas en tablero.",img:"images/cultist.png"},
+    {name:"Blade Dancer",r:"legendary",t:"A",icon:"💃",role:"dps",desc:"Velocidad crece con adyacentes iguales.",img:"images/blade-dancer.png"},
+    {name:"Robot",r:"legendary",t:"A",icon:"🤖",role:"dps",desc:"Láseres que rebotan entre enemigos.",img:"images/robot.png"},
+    {name:"Inquisitor",r:"legendary",t:"B",icon:"⚡",role:"dps",desc:"Buff con 1, 4, 7 o 9 en tablero. Fuerte vs bosses.",img:"images/inquisitor.png"},
+    {name:"Bruiser",r:"legendary",t:"B",icon:"👊",role:"dps",desc:"Golpe físico masivo. Fuerza bruta.",img:"images/bruiser.png"},
+    {name:"Minotaur",r:"legendary",t:"B",icon:"🐂",role:"support",desc:"Terremotos que ralentizan y dañan en área.",img:"images/minotaur.png"},
+    {name:"Tesla",r:"legendary",t:"B",icon:"🔋",role:"dps",desc:"Cadena de rayos entre enemigos cercanos.",img:"images/tesla.webp"},
+    {name:"Frost",r:"legendary",t:"B",icon:"🥶",role:"support",desc:"Congela y ralentiza en área.",img:"images/frost.png"},
+    {name:"Trapper",r:"legendary",t:"B",icon:"🪤",role:"support",desc:"Trampas que inmovilizan enemigos.",img:"images/trapper.webp"},
+    {name:"Boreas",r:"legendary",t:"C",icon:"❄️",role:"dps",desc:"Hielo en área. Tres fases de ataque.",img:"images/boreas.png"},
+    {name:"Shaman",r:"legendary",t:"C",icon:"🪶",role:"support",desc:"Reduce nivel de merge enemigo. Disruptivo.",img:"images/shaman.webp"},
+    {name:"Demonologist",r:"legendary",t:"C",icon:"📖",role:"dps",desc:"Invoca demonios independientes.",img:"images/demonologist.png"},
+    {name:"Stasis",r:"legendary",t:"C",icon:"⏸️",role:"support",desc:"Congela enemigos temporalmente.",img:"images/stasis.webp"},
+    {name:"Clock of Power",r:"legendary",t:"C",icon:"🕐",role:"support",desc:"Acelera tiempo para unidades aliadas.",img:"images/clock-of-power.png"},
+    {name:"Hex",r:"legendary",t:"C",icon:"✡️",role:"support",desc:"Maldice enemigos haciéndolos vulnerables.",img:"images/hex.png"},
+    {name:"Crystalmancer",r:"epic",t:"B",icon:"💎",role:"dps",desc:"Cristales con daño creciente.",img:"images/crystalmancer.png"},
+    {name:"Vampire",r:"epic",t:"B",icon:"🧛",role:"support",desc:"Drena vida y genera maná.",img:"images/vampire.png"},
+    {name:"Executioner",r:"epic",t:"B",icon:"🪓",role:"dps",desc:"Hachas giratorias que golpean en línea.",img:"images/executioner.png"},
+    {name:"Mime",r:"epic",t:"B",icon:"🎭",role:"support",desc:"Copia la unidad fusionada. Duplica clave.",img:"images/mime.png"},
+    {name:"Engineer",r:"epic",t:"B",icon:"⚙️",role:"dps",desc:"Torretas auto. Poder en cadena.",img:"images/engineer.png"},
+    {name:"Portal Keeper",r:"epic",t:"B",icon:"🚪",role:"support",desc:"Teleporta unidades a posiciones óptimas.",img:"images/portal-keeper.png"},
+    {name:"Portal Mage",r:"epic",t:"B",icon:"🌀",role:"support",desc:"Envía enemigos al inicio del camino.",img:"images/portal-mage.png"},
+    {name:"Reaper",r:"epic",t:"B",icon:"💀",role:"dps",desc:"Ejecuta enemigos con poca vida.",img:"images/reaper.png"},
+    {name:"Gargoyle",r:"epic",t:"C",icon:"🗽",role:"dps",desc:"Se petrifica y gana daño. Ciclos.",img:"images/gargoyle.png"},
+    {name:"Plague Doctor",r:"epic",t:"C",icon:"🩺",role:"dps",desc:"Veneno que daña con el tiempo.",img:"images/plague-doctor.png"},
+    {name:"Wind Archer",r:"epic",t:"C",icon:"🏹",role:"dps",desc:"Flechas de viento que empujan enemigos.",img:"images/wind-archer.png"},
+    {name:"Thunderer",r:"epic",t:"C",icon:"⛈️",role:"dps",desc:"Rayos aleatorios AoE.",img:"images/thunderer.png"},
+    {name:"Ivy",r:"epic",t:"B",icon:"🌱",role:"support",desc:"Enreda enemigos ralentizándolos.",img:"images/ivy.png"},
+    {name:"Catapult",r:"epic",t:"C",icon:"🏗️",role:"dps",desc:"Rocas con daño en área. Lento.",img:"images/catapult.png"},
+    {name:"Pyrotechnic",r:"epic",t:"C",icon:"🎆",role:"dps",desc:"Explosivos. Escala aislado.",img:"images/pyrotechnic.png"},
+    {name:"Chemist",r:"rare",t:"A",icon:"🧪",role:"support",desc:"Aumenta daño que reciben enemigos.",img:"images/chemist.webp"},
+    {name:"Alchemist",r:"rare",t:"B",icon:"⚗️",role:"support",desc:"Pociones que ralentizan y dañan.",img:"images/alchemist.png"},
+    {name:"Banner",r:"rare",t:"B",icon:"🚩",role:"support",desc:"Buff de daño a adyacentes.",img:"images/banner.png"},
+    {name:"Grindstone",r:"rare",t:"B",icon:"🪨",role:"support",desc:"Aumenta daño crítico adyacente.",img:"images/grindstone.webp"},
+    {name:"Zealot",r:"rare",t:"B",icon:"🙏",role:"dps",desc:"DPS que se potencia con soporte.",img:"images/zealot.png"},
+    {name:"Magic Cauldron",r:"rare",t:"B",icon:"🍵",role:"support",desc:"Genera maná pasivo.",img:"images/magic-cauldron.webp"},
+    {name:"Priestess",r:"rare",t:"C",icon:"⛪",role:"support",desc:"Genera maná al atacar.",img:"images/priestess.webp"},
+    {name:"Sharpshooter",r:"rare",t:"C",icon:"🎯",role:"dps",desc:"Alto daño single-target.",img:"images/sharpshooter.png"},
+    {name:"Sentry",r:"rare",t:"D",icon:"🛡️",role:"dps",desc:"Defensiva con ataque lento.",img:"images/sentry.png"},
+    {name:"Archer",r:"common",t:"D",icon:"🏹",role:"dps",desc:"Unidad básica de daño.",img:"images/archer.png"},
+    {name:"Fire Mage",r:"common",t:"D",icon:"🔥",role:"dps",desc:"Bolas de fuego moderadas.",img:"images/fire-mage.png"},
+    {name:"Cold Mage",r:"common",t:"D",icon:"❄️",role:"support",desc:"Ralentiza enemigos con hielo.",img:"images/cold-mage.png"},
+    {name:"Lightning Mage",r:"common",t:"D",icon:"⚡",role:"dps",desc:"Cadena de rayos básica.",img:"images/lightning-mage.png"},
+    {name:"Thrower",r:"common",t:"D",icon:"🪃",role:"dps",desc:"Proyectiles que rebotan.",img:"images/thrower.png"},
+    {name:"Poisoner",r:"common",t:"D",icon:"☠️",role:"dps",desc:"Veneno básico DoT.",img:"images/poisoner.png"},
+    {name:"Hunter",r:"common",t:"D",icon:"🏹",role:"dps",desc:"Flechas rápidas single-target.",img:"images/hunter.png"},
+    {name:"Bombardier",r:"common",t:"D",icon:"💣",role:"dps",desc:"Bombas con daño en área.",img:"images/bombardier.png"},
+    {name:"Rogue",r:"common",t:"D",icon:"🗡️",role:"dps",desc:"Ataque rápido cuerpo a cuerpo.",img:"images/rogue.png"},
+];
+
+const seen = new Set();
+const U = units.filter(u => { if (seen.has(u.name)) return false; seen.add(u.name); return true; });
+const uMap = {}; U.forEach(u => uMap[u.name] = u);
+
+// === META DECKS ===
+const metaDecks = [
+    // S-TIER
+    {name:"Genie Control",cards:["Genie","Bruiser","Enchanted Sword","Harlequin","Dryad"],tier:"S",type:"PvP",tr:9200,tip:"Genie acumula deseos con vortex merging. Enchanted Sword marca para daño extra."},
+    {name:"Genie Meteor",cards:["Genie","Meteor","Dryad","Harlequin","Knight Statue"],tier:"S",type:"PvP",tr:9000,tip:"Doble DPS: Meteor AoE + Genie single target."},
+    {name:"Corsair Bard",cards:["Corsair","Bard","Dryad","Knight Statue","Harlequin"],tier:"S",type:"PvP",tr:8500,tip:"Bard acelera ataque de Corsair. Knight Statue amplifica daño."},
+    {name:"Spirit Master DPS",cards:["Spirit Master","Dryad","Scrapper","Knight Statue","Harlequin"],tier:"S",type:"PvP",tr:8000,tip:"Spirit Master escala con merge level. Scrapper reorganiza campo."},
+    {name:"Demon Hunter Assault",cards:["Demon Hunter","Dryad","Harlequin","Enchanted Sword","Knight Statue"],tier:"S",type:"PvP",tr:8000,tip:"DH gana stacks con cada merge. A 40 stacks golpea a todos."},
+    {name:"Corsair Aggro",cards:["Corsair","Dryad","Harlequin","Knight Statue","Scrapper"],tier:"S",type:"PvP",tr:8000,tip:"Corsair DPS principal con soporte completo de buffs."},
+    {name:"Meteor Rain",cards:["Meteor","Dryad","Harlequin","Scrapper","Knight Statue"],tier:"S",type:"PvP",tr:7500,tip:"Meteoros potenciados por Knight Statue. Destruye oleadas."},
+    {name:"Treant Power",cards:["Treant","Dryad","Harlequin","Knight Statue","Summoner"],tier:"S",type:"PvP",tr:7500,tip:"Treant consume unidades para crecer. Summoner alimenta."},
+    {name:"Treant Bard Co-op",cards:["Treant","Bard","Dryad","Harlequin","Knight Statue"],tier:"S",type:"Co-op",tr:0,tip:"Treant carry, Bard acelera su ataque masivamente."},
+    {name:"SM Demonologist",cards:["Spirit Master","Demonologist","Clock of Power","Demon Hunter","Robot"],tier:"S",type:"PvP",tr:8000,tip:"Mana-hungry DPS. Domina en partidas cortas."},
+
+    // A-TIER
+    {name:"Blade Dancer Flow",cards:["Blade Dancer","Dryad","Harlequin","Summoner","Knight Statue"],tier:"A",type:"PvP",tr:7000,tip:"Blade Dancer escala con adyacentes iguales. Dryad sube nivel."},
+    {name:"Blade Dancer Portal",cards:["Blade Dancer","Harlequin","Dryad","Portal Keeper","Scrapper"],tier:"A",type:"PvP",tr:7000,tip:"Portal Keeper reposiciona BDs para maximizar daño."},
+    {name:"Bruiser Smash",cards:["Bruiser","Dryad","Harlequin","Knight Statue","Mime"],tier:"A",type:"PvP",tr:7000,tip:"Bruiser golpe masivo. Mime duplica unidades clave."},
+    {name:"Witch Riding Hood",cards:["Witch","Summoner","Harlequin","Dryad","Knight Statue"],tier:"A",type:"PvP",tr:7000,tip:"Witch absorbe unidades para ganar cargas y maná."},
+    {name:"Sea Dog Pirate",cards:["Sea Dog","Corsair","Dryad","Knight Statue","Harlequin"],tier:"A",type:"PvP",tr:7000,tip:"Doble pirata cubriendo diferentes rangos de AoE."},
+    {name:"DH Cultist Hybrid",cards:["Demon Hunter","Cultist","Dryad","Harlequin","Knight Statue"],tier:"A",type:"PvP",tr:7000,tip:"DH carry con Cultist DPS secundario."},
+    {name:"Inquisitor Burst",cards:["Inquisitor","Knight Statue","Clock of Power","Dryad","Harlequin"],tier:"A",type:"PvP",tr:7000,tip:"Mantener 1, 4, 7 o 9 Inquisitors para buff de daño."},
+    {name:"Inquisitor Portal",cards:["Inquisitor","Portal Keeper","Knight Statue","Scrapper","Bombardier"],tier:"A",type:"PvP",tr:6500,tip:"Portal Keeper posiciona Inquisitors óptimamente."},
+    {name:"Monk Enchanted",cards:["Monk","Enchanted Sword","Harlequin","Dryad","Mime"],tier:"A",type:"PvP",tr:6500,tip:"Monk en líneas verticales y horizontales para bonus."},
+    {name:"Shaman Disruptor",cards:["Shaman","Harlequin","Summoner","Mime","Knight Statue"],tier:"A",type:"PvP",tr:6500,tip:"Merge shamans reduce nivel enemigo. Muy disruptivo."},
+    {name:"Cultist Circle",cards:["Cultist","Harlequin","Dryad","Summoner","Knight Statue"],tier:"A",type:"PvP",tr:6500,tip:"Múltiples Cultists amplifican daño exponencialmente."},
+    {name:"Monk Zen",cards:["Monk","Dryad","Harlequin","Knight Statue","Summoner"],tier:"A",type:"PvP",tr:6500,tip:"Monk genera maná y buffs. Summoner llena tablero."},
+    {name:"Witch Hex Control",cards:["Witch","Hex","Dryad","Harlequin","Summoner"],tier:"A",type:"PvP",tr:6000,tip:"Doble debuff: Witch velocidad, Hex vulnerabilidad."},
+    {name:"Inquisitor Cold",cards:["Inquisitor","Mime","Cold Mage","Harlequin","Summoner"],tier:"A",type:"PvP",tr:6000,tip:"Cold Mage ralentiza para que Inquisitor stackee más."},
+    {name:"Robot Clock",cards:["Robot","Clock of Power","Frost","Harlequin","Summoner"],tier:"A",type:"PvP",tr:6000,tip:"Clock of Power acelera Robot. Frost controla oleadas."},
+    {name:"Bruiser Clock",cards:["Bruiser","Harlequin","Clock of Power","Scrapper","Mime"],tier:"A",type:"PvP",tr:6000,tip:"Bruiser potenciado por Clock of Power. Tempo rápido."},
+    {name:"Bard Trapper",cards:["Bard","Harlequin","Magic Cauldron","Dryad","Trapper"],tier:"A",type:"PvP",tr:5500,tip:"Trapper inmoviliza mientras Bard acelera todo el tablero."},
+    {name:"Gunslinger Rush",cards:["Gunslinger","Knight Statue","Dryad","Harlequin","Scrapper"],tier:"A",type:"PvP",tr:6000,tip:"Gunslinger con ráfagas rápidas. Knight Statue bufea DPS."},
+    {name:"DH Priestess Co-op",cards:["Demon Hunter","Priestess","Chemist","Cold Mage","Summoner"],tier:"A",type:"Co-op",tr:0,tip:"DH carry en co-op. Chemist amplifica daño del equipo."},
+    {name:"Zealot Co-op",cards:["Harlequin","Zealot","Grindstone","Dryad","Chemist"],tier:"A",type:"Co-op",tr:0,tip:"Zealot se potencia con soporte. Grindstone amplifica crits."},
+    {name:"Zealot Cauldron Co-op",cards:["Harlequin","Zealot","Chemist","Magic Cauldron","Cold Mage"],tier:"A",type:"Co-op",tr:0,tip:"Zealot con economía de maná. Cold Mage control."},
+    {name:"Shaman Support Co-op",cards:["Shaman","Harlequin","Dryad","Portal Keeper","Mime"],tier:"A",type:"Co-op",tr:0,tip:"Soporte puro: baja nivel enemigo mientras el carry destroza."},
+    {name:"Inquisitor Carry Co-op",cards:["Inquisitor","Knight Statue","Bombardier","Dryad","Portal Keeper"],tier:"A",type:"Co-op",tr:0,tip:"Inquisitor carry con Bombardier stun. Portal Keeper posiciona."},
+    {name:"Stasis Inquisitor",cards:["Stasis","Inquisitor","Harlequin","Summoner","Demonologist"],tier:"A",type:"PvP",tr:5500,tip:"Stasis congela mientras Inquisitor stackea daño."},
+
+    // B-TIER
+    {name:"Boreas Grindstone",cards:["Boreas","Grindstone","Dryad","Portal Keeper","Chemist"],tier:"B",type:"PvP",tr:5500,tip:"Grindstone amplifica crits de Boreas. Triple fase de ataque."},
+    {name:"Tesla Storm",cards:["Tesla","Dryad","Harlequin","Knight Statue","Frost"],tier:"B",type:"PvP",tr:5500,tip:"Tesla encadena rayos. Frost agrupa enemigos."},
+    {name:"Minotaur Tank",cards:["Minotaur","Dryad","Frost","Harlequin","Knight Statue"],tier:"B",type:"PvP",tr:5000,tip:"Minotaur stun + Frost slow = control total."},
+    {name:"Engineer Chain",cards:["Engineer","Harlequin","Mime","Chemist","Bombardier"],tier:"B",type:"PvP F2P",tr:5000,tip:"Engineers en cadena escalan daño. F2P friendly."},
+    {name:"Meteor Minotaur",cards:["Harlequin","Mime","Meteor","Minotaur","Portal Mage"],tier:"B",type:"PvP",tr:5000,tip:"Meteoritos + Minotaur stun. Portal Mage devuelve enemigos."},
+    {name:"Stasis Freeze",cards:["Stasis","Frost","Dryad","Harlequin","Summoner"],tier:"B",type:"PvP",tr:4500,tip:"Doble freeze. Enemigos apenas se mueven."},
+    {name:"Pyro Grindstone",cards:["Pyrotechnic","Grindstone","Portal Keeper","Dryad","Vampire"],tier:"B",type:"PvP",tr:4000,tip:"Pyro escala aislado. Grindstone mejora crits."},
+    {name:"Crystal Thunder",cards:["Crystalmancer","Thunderer","Bombardier","Cold Mage","Chemist"],tier:"B",type:"PvP",tr:4000,tip:"Control con debuffs y CC. Sin legendarias."},
+    {name:"La Meule (Boreas)",cards:["Boreas","Grindstone","Dryad","Harlequin","Executioner"],tier:"B",type:"PvP",tr:3500,tip:"Combo clásico Boreas + Grindstone + Executioner backup."},
+    {name:"Boreas Chemist",cards:["Boreas","Dryad","Harlequin","Chemist","Summoner"],tier:"B",type:"PvP",tr:4000,tip:"Boreas potenciado por Chemist debuff."},
+    {name:"Gatekeeper",cards:["Portal Keeper","Dryad","Priestess","Engineer","Chemist"],tier:"B",type:"PvP",tr:3000,tip:"Portal Keeper reposiciona. Economía con Priestess."},
+    {name:"Trapper DH",cards:["Trapper","Enchanted Sword","Witch","Demon Hunter","Dryad"],tier:"B",type:"PvP",tr:5000,tip:"Trapper inmoviliza, DH stackea libre. Witch debufea."},
+    {name:"Bombardier Grindstone",cards:["Bombardier","Grindstone","Vampire","Boreas","Trapper"],tier:"B",type:"PvP",tr:3500,tip:"Combo accesible. Grindstone amplifica todo."},
+    {name:"BD Carry Co-op",cards:["Blade Dancer","Dryad","Harlequin","Portal Keeper","Bombardier"],tier:"B",type:"Co-op",tr:0,tip:"Blade Dancer carry. Portal Keeper optimiza posición."},
+    {name:"Tesla Carry Co-op",cards:["Tesla","Knight Statue","Bombardier","Dryad","Portal Keeper"],tier:"B",type:"Co-op",tr:0,tip:"Tesla carry con Knight Statue buffer."},
+    {name:"Engineer Carry Co-op",cards:["Engineer","Portal Keeper","Harlequin","Bombardier","Dryad"],tier:"B",type:"Co-op",tr:0,tip:"Engineer en cadena como carry."},
+    {name:"Witch Tesla Co-op",cards:["Witch","Knight Statue","Tesla","Bombardier","Dryad"],tier:"B",type:"Co-op",tr:0,tip:"Witch merges potencian Tesla. Knight Statue bufea."},
+    {name:"Crystal Mime Co-op",cards:["Crystalmancer","Mime","Wind Archer","Hex","Alchemist"],tier:"B",type:"Co-op",tr:0,tip:"Co-op accesible sin legendarias top."},
+
+    // C-TIER
+    {name:"F2P Crystalmancer",cards:["Crystalmancer","Chemist","Grindstone","Banner","Bombardier"],tier:"C",type:"PvP F2P",tr:2500,tip:"Sin legendarias. Crystalmancer DPS, Banner + Chemist bufean."},
+    {name:"F2P Executioner",cards:["Executioner","Chemist","Vampire","Alchemist","Banner"],tier:"C",type:"PvP F2P",tr:3000,tip:"F2P accesible. Vampire maná, Chemist amplifica."},
+    {name:"F2P Engineer",cards:["Engineer","Plague Doctor","Priestess","Bombardier","Portal Mage"],tier:"C",type:"PvP F2P",tr:2000,tip:"F2P friendly. Engineers cadena + economía Priestess."},
+    {name:"Reaper Intermedio",cards:["Reaper","Priestess","Engineer","Lightning Mage","Hunter"],tier:"C",type:"PvP",tr:2000,tip:"Deck intermedio. Reaper ejecuta enemigos bajos."},
+    {name:"Principiante",cards:["Archer","Hunter","Alchemist","Reaper","Priestess"],tier:"C",type:"PvP",tr:1000,tip:"Tu primer mazo competitivo."},
+];
+
+// === STATE ===
+let sel = new Set(JSON.parse(localStorage.getItem('rr_selected') || '[]'));
+let fR = 'all', fRo = 'all', fS = '', fDt = 'all', fDTi = 'all';
+
+function save() {
+    localStorage.setItem('rr_selected', JSON.stringify([...sel]));
+    const i = document.getElementById('saveInd');
+    i.classList.add('show'); setTimeout(() => i.classList.remove('show'), 1200);
+}
+
+// === RENDER CARDS ===
+function renderCards() {
+    const g = document.getElementById('cardsGrid');
+    const to = {S:0,A:1,B:2,C:3,D:4}, ro = {legendary:0,epic:1,rare:2,common:3};
+    let f = U.filter(u => {
+        if (fR !== 'all' && u.r !== fR) return false;
+        if (fRo !== 'all' && u.role !== fRo) return false;
+        if (fS && !u.name.toLowerCase().includes(fS.toLowerCase())) return false;
+        return true;
+    }).sort((a,b) => to[a.t]-to[b.t] || ro[a.r]-ro[b.r]);
+
+    g.innerHTML = f.map(u => `
+        <div class="card rarity-${u.r} ${sel.has(u.name)?'selected':''}" onclick="toggle('${u.name.replace(/'/g,"\\'")}')">
+            <div class="check-mark">✓</div>
+            <div class="card-img">${u.img?`<img src="${u.img}" alt="${u.name}" onerror="this.parentElement.textContent='${u.icon}'">`:u.icon}</div>
+            <div class="card-label">${u.name}</div>
+            <div class="tier-badge tier-${u.t}">${u.t}</div>
+            <div class="tip"><div class="tip-name">${u.name}</div><div class="tip-role">${u.role==='dps'?'DPS':'Support'}</div><div class="tip-desc">${u.desc}</div></div>
+        </div>
+    `).join('');
+    updCount();
+}
+
+function toggle(n) { sel.has(n)?sel.delete(n):sel.add(n); save(); renderCards(); }
+function updCount() {
+    const c = sel.size;
+    document.getElementById('selCount').textContent = `${c} seleccionada${c!==1?'s':''}`;
+    document.getElementById('findBtn').disabled = c < 5;
+}
+function clearSel() { sel.clear(); save(); renderCards(); }
+function fRarity(v,b) { fR=v; document.querySelectorAll('[data-f="rarity"]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderCards(); }
+function fRole(v,b) { fRo=v; document.querySelectorAll('[data-f="role"]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderCards(); }
+function fSearch(v) { fS=v; renderCards(); }
+function fDeck(v,b) { fDt=v; document.querySelectorAll('[data-f="dtype"]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderDecks(); }
+function fDTier(v,b) { fDTi=v; document.querySelectorAll('[data-f="dtier"]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); renderDecks(); }
+
+function showTab(tab) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    if (tab === 'select') {
+        document.querySelectorAll('.nav-tab')[0].classList.add('active');
+        document.getElementById('tab-select').style.display = 'block';
+        document.getElementById('tab-decks').style.display = 'none';
+    } else {
+        document.querySelectorAll('.nav-tab')[1].classList.add('active');
+        document.getElementById('tab-select').style.display = 'none';
+        document.getElementById('tab-decks').style.display = 'block';
+        document.getElementById('tab-decks').classList.add('visible');
+        renderDecks();
+    }
+}
+function goToDecks() { showTab('decks'); }
+
+// === RENDER DECKS ===
+function renderDecks() {
+    const out = document.getElementById('decksOut');
+    let decks = metaDecks.slice();
+
+    // Filter by type
+    if (fDt !== 'all') {
+        if (fDt === 'F2P') decks = decks.filter(d => d.type.includes('F2P'));
+        else decks = decks.filter(d => d.type.includes(fDt) && !d.type.includes('F2P'));
+    }
+    // Filter by tier
+    if (fDTi !== 'all') decks = decks.filter(d => d.tier === fDTi);
+
+    // Compute match info
+    const hasSelection = sel.size >= 1;
+    decks = decks.map(d => {
+        const owned = d.cards.filter(c => sel.has(c));
+        const missing = d.cards.filter(c => !sel.has(c));
+        const pct = hasSelection ? Math.round((owned.length / d.cards.length) * 100) : -1;
+        return {...d, owned, missing, pct};
+    });
+
+    // SORT: by match % desc, then by trophies desc, then tier
+    const tv = {S:4,A:3,B:2,C:1,D:0};
+    if (hasSelection) {
+        decks.sort((a,b) => b.pct - a.pct || b.tr - a.tr || tv[b.tier] - tv[a.tier]);
+    } else {
+        decks.sort((a,b) => tv[b.tier] - tv[a.tier] || b.tr - a.tr);
+    }
+
+    document.getElementById('deckCount').textContent = `${decks.length} mazos`;
+
+    if (decks.length === 0) {
+        out.innerHTML = '<div class="no-results"><p>No hay mazos para estos filtros.</p></div>';
+        return;
+    }
+
+    // Group by tier if no selection, flat list if selection
+    if (hasSelection) {
+        // Flat sorted list
+        out.innerHTML = '<div class="decks-grid">' + decks.map(d => deckHTML(d)).join('') + '</div>';
+    } else {
+        // Grouped by tier
+        let html = '';
+        const tiers = ['S','A','B','C'];
+        const labels = {S:'S-Tier — Meta Dominante',A:'A-Tier — Muy Fuerte',B:'B-Tier — Competitivo',C:'C-Tier — Principiante / F2P'};
+        for (const t of tiers) {
+            const td = decks.filter(d => d.tier === t);
+            if (!td.length) continue;
+            html += `<div class="tier-group">
+                <div class="tier-group-head"><span class="tier-badge tier-${t}">${t}</span> ${labels[t]}</div>
+                <div class="decks-grid">${td.map(d => deckHTML(d)).join('')}</div>
+            </div>`;
+        }
+        out.innerHTML = html;
+    }
+}
+
+function deckHTML(d) {
+    const hasSelection = sel.size >= 1;
+    const typeClass = d.type.includes('F2P') ? 'tag-f2p' : d.type.includes('Co-op') ? 'tag-coop' : 'tag-pvp';
+
+    let matchHtml = '';
+    if (d.pct >= 0) {
+        const mc = d.pct === 100 ? 'match-100' : d.pct >= 80 ? 'match-80' : d.pct >= 60 ? 'match-60' : 'match-low';
+        matchHtml = `<span class="deck-match ${mc}">${d.pct}%${d.pct===100?' ✓':''}</span>`;
+    }
+
+    const cardsHtml = d.cards.map(c => {
+        const u = uMap[c];
+        const miss = hasSelection && !sel.has(c);
+        const own = hasSelection && sel.has(c);
+        return `<div class="deck-unit ${miss?'is-missing':''} ${own?'is-owned':''}">
+            <div class="card-img rarity-${u?u.r:'common'}">
+                ${u&&u.img?'<img src="'+u.img+'" alt="'+c+'" onerror="this.parentElement.textContent=\''+(u?u.icon:'?')+'\'">':u?u.icon:'?'}
+            </div>
+            <div class="card-label">${c}</div>
+        </div>`;
+    }).join('');
+
+    let missingHtml = '';
+    if (d.pct >= 0 && d.pct < 100 && d.missing.length) {
+        missingHtml = `<div class="deck-missing-list">Faltan: ${d.missing.join(', ')}</div>`;
+    }
+
+    return `<div class="deck-card">
+        <div class="deck-header">
+            <div class="deck-name">${d.name}</div>
+            ${matchHtml}
+        </div>
+        <div class="deck-tags">
+            <span class="tag ${typeClass}">${d.type}</span>
+            ${d.tr ? '<span class="tag tag-trophies">🏆 '+d.tr+'+</span>' : ''}
+            ${d.pct===100?'<span class="tag" style="background:rgba(0,230,118,0.12);color:var(--green)">Completo</span>':''}
+        </div>
+        <div class="deck-units">${cardsHtml}</div>
+        ${missingHtml}
+        ${d.tip?'<div class="deck-tip">'+d.tip+'</div>':''}
+    </div>`;
+}
+
+// === INIT ===
+document.getElementById('totalUnits').textContent = U.length;
+document.getElementById('totalDecks').textContent = metaDecks.length;
+document.getElementById('deckBadge').textContent = metaDecks.length;
+renderCards();
+</script>
+</body>
+</html>

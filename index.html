@@ -1,199 +1,809 @@
+
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>32888444d</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rubik+Glitch+Pop&family=Nabla&family=Bungee+Shade&family=Fascinate+Inline&family=Monoton&display=swap" rel="stylesheet">
+	<meta charset="UTF-8">
+	<title>CDG</title>
+	<meta name="description" content="CDG by Comme des Garçons.">
+	<link rel="stylesheet" type="text/css" href="css/style2.css">
+    <link rel="icon" type="image/x-icon" href="./img/favicon.ico">
+    <link rel="icon" type="image/png" href="./img/favicon-96x96.png" sizes="96x96">  
+    <link rel="apple-touch-icon" href="./img/apple-icon-180x180.png">
+
+	<script src="//geoip-js.com/js/apis/geoip2/v2.1/geoip2.js" type="text/javascript"></script>
+	<script src="./js/jquery-1.9.1.js"></script>
+	<script src="./js/cookie.js"></script>
+	<script src="./js/geoip3.js"></script>
+	<script src="./js/d3.min2.js"></script>
+	<script src="./js/matter.min.js"></script>
+
+    <script src="./js/three.js"></script>
+
+    <style>
+
+        *{
+            margin: 0;
+            padding: 0;
+        }
+
+        body{
+            cursor: pointer;
+        }
+
+        #canvas{
+            display: block ;
+            position: fixed;
+
+            width: 100%;
+            height: 100vh;
+            cursor: pointer;
+        }
+
+        .frame{
+            display: block;
+            position: relative;
+
+            width: 100%;
+            height: 50vh;
+        }
+
+        .form-row select{
+            color: #000;
+        }
+
+        .svg_container {
+            display: block;
+            position: absolute;
+
+            width: 100%;
+            height: 100svh;
+
+            overflow: hidden;
+        }
+
+        .svg_container.hide {
+            display: none;
+        }
+
+        .oct_svg {
+
+            display: block;
+            position: absolute;
+
+            top: 50%;
+            left: 50%;
+
+            width: auto;
+            height: 110%;
+            transform:translate(-50%,-50%);
+        }
+
+    </style>
 </head>
 <body>
 
-  <!-- INTERACTIVE BANNER -->
-  <div id="banner">
-    <canvas id="banner-canvas"></canvas>
-  </div>
+    <canvas id="canvas"></canvas>
 
-  <!-- NAV -->
-  <nav id="nav">
-    <div class="nav-links">
-      <a href="#work">Work</a>
-      <a href="#about">About</a>
-      <a class="nav-center-sigil" href="#">&#10022;</a>
-      <a href="#services">Services</a>
-      <a href="#contact">Contact</a>
+    <div class="svg_container hide" id="svg_container">
+        <img src="./images/2026march13.svg" class="oct_svg">
     </div>
-    <button class="nav-toggle" aria-label="Menu">
-      <span></span><span></span>
-    </button>
-  </nav>
 
-  <!-- HERO: hidden for now -->
-  <!--
-  <header id="hero">
-    <div class="collage-hero">
-      <div class="collage-cell c1"><div class="img-slot" style="background-image:url('img/hero-1.jpg')"></div></div>
-      <div class="collage-cell c2"><div class="img-slot" style="background-image:url('img/hero-2.jpg')"></div></div>
-      <div class="collage-cell c3"><div class="img-slot" style="background-image:url('img/hero-3.jpg')"></div></div>
-      <div class="collage-cell c4"><div class="img-slot" style="background-image:url('img/hero-4.jpg')"></div></div>
-      <div class="collage-cell c5"><div class="img-slot" style="background-image:url('img/hero-5.jpg')"></div></div>
-      <div class="collage-cell c6"><div class="img-slot" style="background-image:url('img/hero-6.jpg')"></div></div>
-      <div class="collage-cell c7"><div class="img-slot" style="background-image:url('img/hero-7.jpg')"></div></div>
-      <div class="collage-cell c8"><div class="img-slot" style="background-image:url('img/hero-8.jpg')"></div></div>
-      <div class="collage-cell c9"><div class="img-slot" style="background-image:url('img/hero-9.jpg')"></div></div>
-      <div class="hero-title-cell">
-        <h1>32888444d</h1>
-        <p class="hero-sub">&#10022;</p>
-      </div>
+    <div id="container">
+        <div class="frame"></div>
     </div>
-  </header>
-  -->
 
-  <!-- WORK: masonry gallery -->
-  <section id="work">
-    <div class="section-whisper"><span>&#10022;</span> Work <span>&#10022;</span></div>
-    <div class="masonry" id="masonry-grid">
+    <script>
 
-      <a href="#" class="tile tile-wide" data-tags="game code">
-        <div class="img-slot" style="background-color:#87ceeb;background-image:url('img/boombang.jpg')"></div>
-        <div class="tile-overlay">
-          <span class="tile-tag">Game / Code — BoomBang</span>
-        </div>
-      </a>
+    var geoip = new CDGGeoIp();
+    var targetUrl = 'https://www.cdgcdgcdg.com/location/';
 
-      <a href="#" class="tile tile-wide" data-tags="game code">
-        <div class="img-slot" style="background-color:#0b3d91;background-image:url('img/clubpenguin.jpg')"></div>
-        <div class="tile-overlay">
-          <span class="tile-tag">Game / Code — Club Penguin CPPS</span>
-        </div>
-      </a>
+    geoip.get_users_preferred_website(function(website){
+        if (website !== false) {
+            targetUrl = website.url;
+        }
+	});
 
-      <a href="flappy.html" class="tile tile-tall" data-tags="game">
-        <div class="img-slot" style="background-color:#87ceeb;background-image:url('img/flappy.jpg')"></div>
-        <div class="tile-overlay">
-          <span class="tile-tag">Game — Flappy Bird</span>
-        </div>
-      </a>
+        /*        
+           // 回転中心を上部にシフト
+            vec3 newPosition = position - vec3(0.0, 0.5, 0.0);
+            // 回転行列の計算
+            float s = sin(rotation);
+            float c = cos(rotation);
+            mat3 rotationMatrix = mat3(
+                c, -s, 0.0,
+                s,  c, 0.0,
+                0.0, 0.0, 1.0
+            );
+            // 回転適用
+            newPosition = rotationMatrix * newPosition;
+            // 回転中心を元に戻す
+            newPosition += vec3(0.0, 0.5, 0.0);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+        
 
-      <a href="photobooth.html" class="tile tile-wide" data-tags="code visual">
-        <div class="img-slot" style="background-color:#ffffff;background-image:url('img/photobooth.jpg')"></div>
-        <div class="tile-overlay">
-          <span class="tile-tag">Code / Visual — Photo Booth</span>
-        </div>
-      </a>
+        */
 
-      <a href="works/openhexagon.html" class="tile tile-wide" data-tags="game">
-        <div class="img-slot" style="background-color:#0a2530;background-image:url('img/hexagon.jpg')"></div>
-        <div class="tile-overlay">
-          <span class="tile-tag">Game — Super Hexagon</span>
-        </div>
-      </a>
+        const vertex_shader = `
+        varying vec2 vUv;
+        void main() {
+         
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+        `;
 
-    </div>
-    <div class="filter-strip">
-      <button class="ftag active" data-f="all">&#10022;</button>
-      <button class="ftag" data-f="ai">AI</button>
-      <button class="ftag" data-f="code">Code</button>
-      <button class="ftag" data-f="game">Game</button>
-      <button class="ftag" data-f="visual">Visual</button>
-    </div>
-  </section>
+        const fragment_shader = `
+        uniform sampler2D texture;
+        uniform float time;
+        uniform int is_flicker;
+        varying vec2 vUv;
 
-  <!-- ABOUT: image + minimal text -->
-  <section id="about">
-    <div class="about-grid">
-      <div class="about-image">
-        <div class="img-slot" style="background-image:url('img/about.jpg')"><span class="slot-hint">img/about.jpg</span></div>
-      </div>
-      <div class="about-image">
-        <div class="img-slot" style="background-image:url('img/about-2.jpg')"><span class="slot-hint">img/about-2.jpg</span></div>
-      </div>
-      <div class="about-text">
-        <p>Cosas que se hacen con maquinas y sin ellas.</p>
-        <p class="muted">Codigo, imagenes, juegos, ruido.</p>
-      </div>
-      <div class="about-image">
-        <div class="img-slot" style="background-image:url('img/about-3.jpg')"><span class="slot-hint">img/about-3.jpg</span></div>
-      </div>
-    </div>
-  </section>
+        void main() {
+               
+            vec4 color = texture2D(texture, vec2(vUv.x, vUv.y));
 
-  <!-- BLOG: visual cards -->
-  <section id="blog">
-    <div class="section-whisper"><span>&#10022;</span> Notes <span>&#10022;</span></div>
-    <div class="blog-scroll">
-      <article class="blog-card">
-        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-1.jpg')"><span class="slot-hint">img/blog-1.jpg</span></div></div>
-        <div class="blog-meta">
-          <span class="blog-date">15.03</span>
-          <h3>Cuando la maquina suena</h3>
-        </div>
-      </article>
-      <article class="blog-card">
-        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-2.jpg')"><span class="slot-hint">img/blog-2.jpg</span></div></div>
-        <div class="blog-meta">
-          <span class="blog-date">02.03</span>
-          <h3>Esculpir con algoritmos</h3>
-        </div>
-      </article>
-      <article class="blog-card">
-        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-3.jpg')"><span class="slot-hint">img/blog-3.jpg</span></div></div>
-        <div class="blog-meta">
-          <span class="blog-date">18.02</span>
-          <h3>Collage en la era digital</h3>
-        </div>
-      </article>
-      <article class="blog-card">
-        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-4.jpg')"><span class="slot-hint">img/blog-4.jpg</span></div></div>
-        <div class="blog-meta">
-          <span class="blog-date">04.02</span>
-          <h3>Ruido y senal</h3>
-        </div>
-      </article>
-    </div>
-  </section>
+            if ( is_flicker >  0){
 
-  <!-- SERVICES: minimal, cryptic -->
-  <section id="services">
-    <div class="services-strip">
-      <div class="service-item">
-        <span class="service-glyph">&#9681;</span>
-        <span class="service-name">Imagen generativa</span>
-      </div>
-      <div class="service-item">
-        <span class="service-glyph">&#9672;</span>
-        <span class="service-name">Juegos & interactivos</span>
-      </div>
-      <div class="service-item">
-        <span class="service-glyph">&#10070;</span>
-        <span class="service-name">Desarrollo creativo</span>
-      </div>
-      <div class="service-item">
-        <span class="service-glyph">&#10048;</span>
-        <span class="service-name">Consultoria IA</span>
-      </div>
-    </div>
-  </section>
+                float alpha = sin(time * 10.0) * 0.5 + 0.5;
 
-  <!-- CONTACT: hermetic -->
-  <section id="contact">
-    <div class="contact-core">
-      <p class="contact-line">&#10022;</p>
-      <p class="contact-line"><a href="mailto:tu@email.com">Mail</a></p>
-      <p class="contact-line"><a href="https://github.com/DAVhg" target="_blank" rel="noopener">GitHub</a></p>
-      <p class="contact-line"><a href="https://soundcloud.com/32888444d" target="_blank" rel="noopener">SoundCloud</a></p>
-      <p class="contact-line"><a href="https://es.pinterest.com/32888444dd/" target="_blank" rel="noopener">Pinterest</a></p>
-      <p class="contact-line">&#10022;</p>
-    </div>
-  </section>
+                gl_FragColor = vec4(color.rgb, 0.1 * alpha);
+            }else{
+                
+                gl_FragColor = vec4(color);
+            }
+        }
+        `;
 
-  <footer>
-    <span>32888444d</span>
-  </footer>
 
-  <script src="js/banner.js"></script>
-  <script src="js/main.js"></script>
+
+        let is_top = true;
+
+        let planes = [];
+
+        let news_planes = [];
+
+        let planes_right = [];
+        let total_scroll_height = 0;
+
+        let clock = new THREE.Clock();
+
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.001, 2000);
+
+        camera.position.z = 2.5;
+
+        // #canvasをコンテクストにして、レンダラーを作成
+        var renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas') });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // clear colorを設定 #ffffff にする
+        renderer.setClearColor(0xffffff, 1);
+      
+        // plane geometryを2つ作成
+
+        /* map を SZ-T046-051.png にする */
+        var makeGeometry = function (_w, _h, _repeat) {
+            // w x h の長方形を縦と横にrepeat個並べた形状を作成
+            // uvは、w x hの長方形ごとに0.0 ~ 1.0になるように設定
+            var positions = [];
+            var uvs = [];
+
+            for (var i = 0; i < _repeat; i++) {
+                for (var j = 0; j < _repeat; j++) {
+                    var x = _w * i;
+                    var y = _h * j;
+                    var uv_x = 1.0 / _repeat * i;
+                    var uv_y = 1.0 / _repeat * j;
+
+                    // 1
+                    positions.push(x, y, 0.0);
+                    uvs.push(uv_x, uv_y);
+
+                    // 2
+                    positions.push(x + _w, y, 0.0);
+                    uvs.push(uv_x + 1.0 / _repeat, uv_y);
+
+                    // 3
+                    positions.push(x, y + _h, 0.0);
+                    uvs.push(uv_x, uv_y + 1.0 / _repeat);
+
+                    // 4
+                    positions.push(x + _w, y, 0.0);
+                    uvs.push(uv_x + 1.0 / _repeat, uv_y);
+
+                    // 5
+                    positions.push(x + _w, y + _h, 0.0);
+                    uvs.push(uv_x + 1.0 / _repeat, uv_y + 1.0 / _repeat);
+
+                    // 6
+                    positions.push(x, y + _h, 0.0);
+                    uvs.push(uv_x, uv_y + 1.0 / _repeat);
+                }
+            }
+
+            var geometry = new THREE.BufferGeometry();
+            geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+            geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+
+            return geometry;
+        };
+        
+
+    
+        // CDG ロゴ, w 317, h 1200 (1:3.78548)
+        // Date , w 256, h 1682 (1:6.5703)
+        // 3799 × 2682
+        var LOGO_SCALE = 2.0;
+        var makeCDGLogo = function(scale, time_scale)
+        {
+            var w = 1.0 * scale;
+            var h = 0.2641666 * scale;
+            var repeat = LOGO_SCALE;
+            var geometry = makeGeometry(w, h, repeat);
+
+            var texture = new THREE.TextureLoader().load('./img/arxhivo_logo.png');
+            // texture.wrapT = THREE.RepeatWrapping;
+            texture.wrapS = THREE.RepeatWrapping;
+            // nearest
+            // texture.magFilter = THREE.NearestFilter;
+            // texture.minFilter = THREE.NearestFilter;
+            var material = new THREE.ShaderMaterial({
+                uniforms: {
+                    texture: {
+                        value: texture
+                    },
+                    time:{
+                        value: 0.0
+                    },
+                    is_flicker:{
+                        value: 0
+                    }
+                },
+                vertexShader: vertex_shader,
+                fragmentShader: fragment_shader,
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+            var plane = new THREE.Mesh(geometry, material);
+            plane.position.x = -(w)/2.0;
+            plane.position.y = -(h)/2.0;
+            plane.position.z = 0.0;
+            plane.time_scale = time_scale;
+            scene.add(plane);
+            planes.push(plane);
+            return plane;
+        }
+
+
+        // NEWSPAER CDG ロゴ
+        // 1 1854 × 488 - 1.0 : 0.263214
+        // 2 1854 × 526 - 1.0 : 0.283710
+        // 3 1854 × 277 - 1.0 : 0.149406
+        // 4 1854 × 386 - 1.0 : 0.208198  
+        // 5 1854 × 261 - 1.0 : 0.140776
+
+                // margins
+
+        // column Left 0
+        const margin_CL0 = -0.035;
+
+        // column Right 0
+        const margin_CR0 = 0.035;
+
+        const margin_between_sep = 0.07;
+
+        // column center 0
+        const margin_CC0 = 0.035;
+        const margin_CC1 = 0.023;
+
+
+        var tmp_scale = 1.0;
+
+        const news_logo_data_A = [
+            // 2304 x 307
+            {w:1.0 * tmp_scale, h: 307.0/2304.0 * tmp_scale, file_name: "./images/pattern_A6x_06.png", y_offset:0 * tmp_scale, is_blink:false},
+            // 2304 x 256
+            {w:1.0 * tmp_scale, h: 256.0/2304.0 * tmp_scale, file_name: "./images/pattern_A6x_05.png", y_offset:(307.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 415
+            {w:1.0 * tmp_scale, h: 415.0/2304.0 * tmp_scale, file_name: "./images/pattern_A6x_04.png", y_offset:(307.0 + 256.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 688
+            {w:1.0 * tmp_scale, h: 688.0/2304.0 * tmp_scale, file_name: "./images/pattern_A6x_03.png", y_offset:(307.0 + 256.0 + 415.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 669
+            {w:1.0 * tmp_scale, h: 669.0/2304.0 * tmp_scale, file_name: "./images/pattern_A6x_02.png", y_offset:(307.0 + 256.0 + 415.0 + 688.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 304
+            {w:1.0 * tmp_scale, h: 304.0/2304.0 * tmp_scale, file_name: "./images/pattern_A6x_01.png", y_offset:(307.0 + 256.0 + 415.0 + 688.0 + 669.0)/2304.0 * tmp_scale, is_blink:false},
+        ];
+
+        const news_logo_data_B = [
+            // 2304 x 631.0
+            {w:1.0 * tmp_scale, h: 631.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_06.png", y_offset:0 * tmp_scale, is_blink:false},
+            // 2304 x 669.0
+            {w:1.0 * tmp_scale, h: 669.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_05.png", y_offset:(631.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 338.0
+            // {w:1.0 * tmp_scale, h: 338.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_04.png", y_offset:(631.0 + 669.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 343.0
+            {w:1.0 * tmp_scale, h: 343.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_03.png", y_offset:(631.0 + 669.0 + 338.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 262.0
+            {w:1.0 * tmp_scale, h: 262.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_02.png", y_offset:(631.0 + 669.0 + 338.0 + 343.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 358.0
+            {w:1.0 * tmp_scale, h: 358.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_01.png", y_offset:(631.0 + 669.0 + 338.0 + 343.0 + 262.0)/2304.0 * tmp_scale, is_blink:false},
+        ];
+
+        const news_logo_data_B_small = [
+            // 2304 x 631.0
+            {w:1.0 * tmp_scale, h: 631.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_06.png", y_offset:0 * tmp_scale, is_blink:false},
+            // 2304 x 669.0
+            {w:1.0 * tmp_scale, h: 669.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_05.png", y_offset:(631.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 343.0
+            {w:1.0 * tmp_scale, h: 343.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_03.png", y_offset:(631.0 + 669.0 )/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 262.0
+            {w:1.0 * tmp_scale, h: 262.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_02.png", y_offset:(631.0 + 669.0 + 343.0 )/2304.0 * tmp_scale, is_blink:false},
+            // 2304 x 358.0
+            {w:1.0 * tmp_scale, h: 358.0/2304.0 * tmp_scale, file_name: "./images/pattern_B6x_01.png", y_offset:(631.0 + 669.0 + 343.0 + 262.0 )/2304.0 * tmp_scale, is_blink:false},
+        ];
+
+        // 6996 × 551
+        const center_large_logo = {w:(3.0 + margin_CC0*2.0) * tmp_scale, h: (3.0 + margin_CC0*2.0) * (300.0/3167.0)* tmp_scale, file_name: "./images/large16x_calc_base.png", y_offset:-3.0 * (300.0/3167.0) * tmp_scale, is_blink:false};
+        
+        // 2723 x 258
+        const center_small_logo = {w:(2723.0/ 2304.0) * tmp_scale, h: (2723.0/ 2304.0) * (258.0/2723.0)* tmp_scale, file_name: "./images/small16x.png", y_offset:(631.0 + 669.0 + 338.0 + 343.0 + 262.0 +358.0)/2304.0  * tmp_scale, is_blink:false};
+
+        const left_blocks = [
+            // 3294 x 647.0
+            {w:(3294.0/ 2304.0) * tmp_scale, h:(3294.0/ 2304.0) *  647.0/3294.0 * tmp_scale, file_name: "./images/pattern_left6x_07.png", y_offset:0 * tmp_scale, is_blink:false},
+            // 3294 x 636.0
+            {w:(3294.0/ 2304.0) * tmp_scale, h:(3294.0/ 2304.0) *  636.0/3294.0 * tmp_scale, file_name: "./images/pattern_left6x_06.png", y_offset:(647.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3294 x 307.0
+            {w:(3294.0/ 2304.0) * tmp_scale, h:(3294.0/ 2304.0) *  307.0/3294.0 * tmp_scale, file_name: "./images/pattern_left6x_05.png", y_offset:(647.0 + 636.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3294 x 271.0
+            {w:(3294.0/ 2304.0) * tmp_scale, h:(3294.0/ 2304.0) *  271.0/3294.0 * tmp_scale, file_name: "./images/pattern_left6x_04.png", y_offset:(647.0 + 636.0 + 307.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3294 x 391.0
+            {w:(3294.0/ 2304.0) * tmp_scale, h:(3294.0/ 2304.0) *  391.0/3294.0 * tmp_scale, file_name: "./images/pattern_left6x_03.png", y_offset:(647.0 + 636.0 + 307.0 + 271.0)/2304.0 * tmp_scale, is_blink:false},
+            // 2588 x 370.0
+            {w:(2588.0/ 2304.0) * tmp_scale, h:(2588.0/ 2304.0) *  370.0/2588.0 * tmp_scale, file_name: "./images/pattern_left6x_02.png", y_offset:(647.0 + 636.0 + 307.0 + 271.0 + 391.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3294 x 1367.0
+            {w:(3294.0/ 2304.0) * tmp_scale, h:(3294.0/ 2304.0) *  1367.0/3294.0 * tmp_scale, file_name:"./images/pattern_left6x_01.png", y_offset:(647.0 + 636.0 + 307.0 + 271.0 + 391.0 + 370.0)/2304.0 * tmp_scale, is_blink:false},
+        ];
+
+        const right_blocks = [
+            // 3285 x 642.0
+            {w:(3285.0/ 2304.0) * tmp_scale, h:(3285.0/ 2304.0) * 642.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_07.png", y_offset:0 * tmp_scale, is_blink:false},
+            // 3285 x 626.0
+            {w:(3285.0/ 2304.0)  * tmp_scale, h:(3285.0/ 2304.0) * 626.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_06.png", y_offset:(642.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3285 x 324.0
+            {w:(3285.0/ 2304.0)  * tmp_scale, h:(3285.0/ 2304.0) * 324.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_05.png", y_offset:(642.0 + 626.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3285 x 266.0
+            {w:(3285.0/ 2304.0)  * tmp_scale, h:(3285.0/ 2304.0) * 266.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_04.png", y_offset:(642.0 + 626.0 + 324.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3285 x 394.0
+            {w:(3285.0/ 2304.0)  * tmp_scale, h:(3285.0/ 2304.0) * 394.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_03.png", y_offset:(642.0 + 626.0 + 324.0 + 266.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3285 x 378.0
+            {w:(3285.0/ 2304.0)  * tmp_scale, h:(3285.0/ 2304.0) * 378.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_02.png", y_offset:(642.0 + 626.0 + 324.0 + 266.0 + 394.0)/2304.0 * tmp_scale, is_blink:false},
+            // 3285 x 1359.0
+            {w:(3285.0/ 2304.0)  * tmp_scale, h:(3285.0/ 2304.0) * 1359.0/3285.0 * tmp_scale, file_name: "./images/pattern_right6x_01.png", y_offset:(642.0 + 626.0 + 324.0 + 266.0 + 394.0 + 378.0)/2304.0 * tmp_scale, is_blink:false},
+        ];
+
+
+        // small parts
+        const small_parts = [
+            // 2303 x 299
+            {w:1.0 * tmp_scale, h: 299.0/2303.0 * tmp_scale, file_name: "./images/small_parts6x_03.png", y_offset:0.0 * tmp_scale, is_blink:false},
+            // 2303 x 261
+            {w:1.0 * tmp_scale, h: 261.0/2303.0 * tmp_scale, file_name: "./images/small_parts6x_02.png", y_offset:(299.0)/2303.0 * tmp_scale, is_blink:false},
+            // 2303 x 367
+            {w:1.0 * tmp_scale, h: 367.0/2303.0 * tmp_scale, file_name: "./images/small_parts6x_01.png", y_offset:(299.0 + 261.0)/2303.0 * tmp_scale, is_blink:false},
+        ];
+
+        var makeNEWSLogo = function(scale, time_scale, news_obj, x_shift, y_shift)
+        {
+            var w = news_obj.w * scale;
+            var h = news_obj.h * scale;
+
+            var y_offset = news_obj.y_offset;
+
+            var repeat = 1;
+            var geometry = makeGeometry(w, h, repeat);
+
+
+            var texture = new THREE.TextureLoader().load(news_obj.file_name, function(texture){
+                texture.needsUpdate = true;
+
+                // texture.wrapT = THREE.RepeatWrapping;
+                //texture.wrapS = THREE.RepeatWrapping;
+                // nearest
+                // texture.magFilter = THREE.NearestFilter;
+                // texture.minFilter = THREE.NearestFilter;
+                var material = new THREE.ShaderMaterial({
+                    uniforms: {
+                        texture: {
+                            value: texture
+                        },
+                        time:{
+                            value: 0.0
+                        },
+                        is_flicker:{
+                            value: 0
+                        }
+                    },
+                    vertexShader: vertex_shader,
+                    fragmentShader: fragment_shader,
+                    transparent: true,
+                    side: THREE.DoubleSide
+                });
+                var plane = new THREE.Mesh(geometry, material);
+                plane.position.x = 0.0 + x_shift;
+                plane.position.y = 0.0 + y_shift + news_obj.y_offset;
+                plane.position.z = -0.001;
+                plane.w = w;
+                plane.h = h;
+                plane.is_blink = news_obj.is_blink;
+                plane.time_scale = time_scale;
+                scene.add(plane);
+                news_planes.push(plane);
+
+                plane.visible = false;
+
+                console.log("plane loaded");
+                
+                // planes.push(plane);
+                // return plane;
+            });
+
+            // bounding boxの計算に必要な値を返す
+            return {x: 0.0 + x_shift, y: 0.0 + y_shift + news_obj.y_offset, w: w, h: h};
+        }
+
+
+        var total_newslogo_offset_x = -0.5;
+        var news_logo_margin = 0.11;
+
+        var news_plane_bbox_list = [];
+
+
+        // 中心部分　/////////////////////////////
+
+
+        // 真ん中、上
+        for (var i = 0; i < news_logo_data_A.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_A[i], total_newslogo_offset_x, 1.26 + margin_CC0 * 2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中
+        for (var i = 0; i < news_logo_data_A.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_A[i], total_newslogo_offset_x, 0.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中、下(大きいロゴ)
+        {
+            var bbox = makeNEWSLogo(1.0, 0.1, center_large_logo, -(1.5+ margin_CC0), 0.0 - margin_CC0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中、下
+        for (var i = 0; i < news_logo_data_A.length-1; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_A[i], total_newslogo_offset_x, -(1.225) - margin_CC0 * 2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+
+        // 真ん中、左、上
+        for (var i = 0; i < news_logo_data_B.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_B[i], total_newslogo_offset_x - 1.0 + margin_CL0 , 1.26 +  margin_CC0*2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中、左
+        for (var i = 0; i < news_logo_data_B.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_B[i], total_newslogo_offset_x - 1.0 + margin_CL0 , + 0.008);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中、左、下
+        for (var i = 0; i < news_logo_data_B_small.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_B_small[i], total_newslogo_offset_x - 1.0 + margin_CL0 ,  -1.223 - margin_CC0 * 2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中、右、上
+        for (var i = 0; i < news_logo_data_B.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_B[i], total_newslogo_offset_x + 1.0 + margin_CR0, 1.26 +  margin_CC0*2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+
+        // 真ん中、右
+        for (var i = 0; i < news_logo_data_B.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_B[i], total_newslogo_offset_x + 1.0 + margin_CR0, + 0.008);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中、右、下
+        for (var i = 0; i < news_logo_data_B_small.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, news_logo_data_B_small[i], total_newslogo_offset_x + 1.0 + margin_CR0, -1.223 - margin_CC0 * 2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中上左、小さいロゴ挿入
+        {
+            var bbox = makeNEWSLogo(1.0, 0.1, center_small_logo, -1.925 + margin_CL0 * 1.0, -0.54);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中上
+        for (var x = -3; x < 3; x++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, center_small_logo, -(2723.0/ 2304.0)*0.5  + x * (2723.0/ 2304.0) + margin_between_sep * x, + 0.008 +  margin_CC0 + 0.01);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 真ん中上右、小さいロゴ挿入
+        {
+            var bbox = makeNEWSLogo(1.0, 0.1, center_small_logo, 0.5 + margin_CR0 *1.0, -0.54);
+            news_plane_bbox_list.push(bbox);
+        }
+
+
+        // 左　/////////////////////////////
+        for (var i = 0; i < left_blocks.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, left_blocks[i], -(1.5 + (3294.0/ 2304.0) ) + margin_CL0 * 2.0,  - 0.59 + margin_CC1);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 左、下(大きいロゴ)
+        {
+            var bbox = makeNEWSLogo(1.0, 0.1, center_large_logo, -(4.5) + margin_CL0 * 4.0, -0.6);
+            news_plane_bbox_list.push(bbox);
+        }
+
+
+        // 左上　角
+        for (var i = 0; i < small_parts.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, small_parts[i], -(1.5 + (2303.0/ 2304.0) ) + margin_CL0 * 2.0, 1.26+  margin_CC0*2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 右　/////////////////////////////
+        for (var i = 0; i < right_blocks.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, right_blocks[i], 1.5 + margin_CR0*2.0, - 0.59 + margin_CC1);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 右、下(大きいロゴ)
+        {
+            var bbox = makeNEWSLogo(1.0, 0.1, center_large_logo, 1.5 + margin_CR0*2.0, -0.6);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        // 右上　角
+        for (var i = 0; i < small_parts.length; i++) {
+            var bbox = makeNEWSLogo(1.0, 0.1, small_parts[i], 1.5 + margin_CR0*2.0, 1.26+  margin_CC0*2.0);
+            news_plane_bbox_list.push(bbox);
+        }
+
+        function hide_planes() {
+
+            is_top = false;
+
+            resize();
+
+            for (var i = 0; i < planes.length; i++) {
+                planes[i].visible = false;
+            }
+
+   
+        }
+
+        // [NEWS PAPER]
+        function show_news_logos() {
+
+    
+
+            for (var i = 0; i < news_planes.length; i++) {
+                news_planes[i].visible = true;
+            }
+        }
+
+        var cnt = 0;
+        // bodyをclickしたら、news logoを表示
+        document.body.addEventListener('click', function() {
+            if ( cnt == 0) {
+                hide_planes();
+                // show_news_logos();
+                // #svg_containerを表示
+                document.getElementById('svg_container').classList.remove('hide');
+                cnt++;
+            } else if (cnt == 1) {
+                Cookies.set('landing_bypass_1218', 'true', {expires: 28});
+                document.location = targetUrl;
+            }
+        });
+
+        // [TOP]
+        var START_Y_OFFSET = 2.6;
+        for (var y = -3; y < 8; y++) {
+            for (var x = -2; x < 3; x++) {
+              var logo = makeCDGLogo(1.0, 0.1);
+              logo.position.x = x * 1.0 * LOGO_SCALE;
+              logo.position.y = y * 0.2641666 * LOGO_SCALE + START_Y_OFFSET;
+
+              logo.position_start = {};
+              logo.position_start.x = x * 1.0 * LOGO_SCALE;
+              logo.position_start.y = y * 0.2641666 * LOGO_SCALE + START_Y_OFFSET;
+
+              logo.position_end = {};
+              logo.position_end.x = x * 1.0 * LOGO_SCALE;
+              logo.position_end.y = y * 0.2641666 * LOGO_SCALE;
+            }
+        }
+        
+        // camera.position.z = 2.1;
+        camera.position.z = 2.1;
+        camera.position.x = 0.0;
+        camera.position.y = -0.11;
+
+        function easeOutBounce(x) {
+            const n1 = 7.5625;
+            const d1 = 2.75;
+
+            if (x < 1 / d1) {
+                return n1 * x * x;
+            } else if (x < 2 / d1) {
+                return n1 * (x -= 1.5 / d1) * x + 0.75;
+            } else if (x < 2.5 / d1) {
+                return n1 * (x -= 2.25 / d1) * x + 0.9375;
+            } else {
+                return n1 * (x -= 2.625 / d1) * x + 0.984375;
+            }
+        }
+    
+        var bounce_end_time = 0.5;
+        var elapsed_time = 0.0;
+        var animate = function () {
+            requestAnimationFrame(animate);
+
+            let delta = clock.getDelta();
+            elapsed_time += delta * 0.7;
+
+            if  (elapsed_time > 1.0){
+                elapsed_time = 1.0;
+            }
+
+            for (var i = 0; i < planes.length; i++) {
+                var plane = planes[i];
+                plane.position.y = plane.position_end.y + START_Y_OFFSET * (1.0 - easeOutBounce(elapsed_time));
+                planes[i].material.uniforms.time.value += delta*2.0;
+
+            
+                if (elapsed_time >= 0.999) {
+                    if (planes[i].material.uniforms.is_flicker.value > 0 ) {
+                        planes[i].flicker_elapsed_time += delta;
+                        if (planes[i].flicker_elapsed_time > 0.025 + 0.015 * Math.random()){
+                        
+                            planes[i].material.uniforms.is_flicker.value = 0;
+                        }
+                    } else{
+                        // ランダムで、フリッカーを適用
+                        if (Math.random() > 0.992){    
+                            planes[i].flicker_elapsed_time = 0.0;
+                            planes[i].material.uniforms.is_flicker.value = 1;
+                        }else{
+                            planes[i].material.uniforms.is_flicker.value = 0;
+                        }
+                    }
+                }
+            }
+
+            for (var i = 0; i < news_planes.length; i++) {
+                var plane = news_planes[i];
+                if(!plane.is_blink){
+                    continue;
+                }
+                
+                // plane.position.y = plane.position_end.y + START_Y_OFFSET * (1.0 - easeOutBounce(elapsed_time));
+                plane.material.uniforms.time.value += delta*2.0;
+
+                if (elapsed_time >= 0.999) {
+                    if (plane.material.uniforms.is_flicker.value > 0 ) {
+                        plane.flicker_elapsed_time += delta;
+                        if (plane.flicker_elapsed_time > 0.025 + 0.015 * Math.random()) {
+                            plane.material.uniforms.is_flicker.value = 0;
+                        }
+                    } else{
+                        // ランダムで、フリッカーを適用
+                        if (Math.random() > 0.992) {
+                            plane.flicker_elapsed_time = 0.0;
+                            plane.material.uniforms.is_flicker.value = 1;
+                        } else {
+                            plane.material.uniforms.is_flicker.value = 0;
+                        }
+                    }
+                }
+            }
+            renderer.render(scene, camera);
+        };
+
+        animate();
+
+        // frameの高さをすべて取得し、total_scroll_heightに代入
+        function calc_total_scroll_height() {
+            total_scroll_height = 0;
+            var frames = document.getElementsByClassName('frame');
+            for (var i = 0; i < frames.length; i++) {
+                total_scroll_height += frames[i].clientHeight;
+            }
+        }
+
+        calc_total_scroll_height();
+
+        function easeOutQuart(x) {
+            return 1 - Math.pow(1 - x, 4);
+        }
+
+        function easeOutCirc(x) {
+            return Math.sqrt(1 - Math.pow(x - 1, 2));
+        }
+
+        function easeOutCubic(x){
+            return 1 - Math.pow(1 - x, 3);
+        }
+
+
+
+        function resize() {
+
+            let ratio = window.innerHeight/window.innerWidth;
+
+            if ( is_top) {
+                camera.position.z = 2.1 + 1.0 * (ratio); // 3.0
+                camera.position.x = -0.4;
+                camera.position.y = -0.11 + 0.4 * (ratio); //  -0.11 - + 0.3
+            } else {
+
+                camera.position.z = 1.6 + 0.6 * (ratio); // 3.0
+                camera.position.x = -0.4;
+                camera.position.x = 0.0;
+                camera.position.y = 0.3; //  -0.11 - + 0.3
+            }
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+
+        }
+
+        // window のリサイズ
+        window.addEventListener('resize', function () {
+            resize();
+        });
+
+        resize();
+
+        /*
+        if (Cookies.get('landing_bypass_1218')) {
+            $('body').on('click',function()
+            {
+                document.location = targetUrl;
+            });
+        }
+        */
+
+    </script>
+
+<script>
+
+	
+    $(function()
+    {
+       
+
+        // click action
+
+        /*
+
+        */
+
+    });
+      
+</script>
 </body>
 </html>

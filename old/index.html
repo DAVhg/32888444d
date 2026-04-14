@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>32888444d</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Instrument+Serif:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Rubik+Glitch+Pop&family=Nabla&family=Bungee+Shade&family=Fascinate+Inline&family=Monoton&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- INTERACTIVE BANNER -->
+  <div id="banner">
+    <canvas id="banner-canvas"></canvas>
+  </div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <div class="nav-links">
+      <a href="#work">Work</a>
+      <a href="#about">About</a>
+      <a class="nav-center-sigil" href="#">&#10022;</a>
+      <a href="#services">Services</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <button class="nav-toggle" aria-label="Menu">
+      <span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- HERO: hidden for now -->
+  <!--
+  <header id="hero">
+    <div class="collage-hero">
+      <div class="collage-cell c1"><div class="img-slot" style="background-image:url('img/hero-1.jpg')"></div></div>
+      <div class="collage-cell c2"><div class="img-slot" style="background-image:url('img/hero-2.jpg')"></div></div>
+      <div class="collage-cell c3"><div class="img-slot" style="background-image:url('img/hero-3.jpg')"></div></div>
+      <div class="collage-cell c4"><div class="img-slot" style="background-image:url('img/hero-4.jpg')"></div></div>
+      <div class="collage-cell c5"><div class="img-slot" style="background-image:url('img/hero-5.jpg')"></div></div>
+      <div class="collage-cell c6"><div class="img-slot" style="background-image:url('img/hero-6.jpg')"></div></div>
+      <div class="collage-cell c7"><div class="img-slot" style="background-image:url('img/hero-7.jpg')"></div></div>
+      <div class="collage-cell c8"><div class="img-slot" style="background-image:url('img/hero-8.jpg')"></div></div>
+      <div class="collage-cell c9"><div class="img-slot" style="background-image:url('img/hero-9.jpg')"></div></div>
+      <div class="hero-title-cell">
+        <h1>32888444d</h1>
+        <p class="hero-sub">&#10022;</p>
+      </div>
+    </div>
+  </header>
+  -->
+
+  <!-- WORK: masonry gallery -->
+  <section id="work">
+    <div class="section-whisper"><span>&#10022;</span> Work <span>&#10022;</span></div>
+    <div class="masonry" id="masonry-grid">
+
+      <a href="#" class="tile tile-wide" data-tags="game code">
+        <div class="img-slot" style="background-color:#87ceeb;background-image:url('img/boombang.jpg')"></div>
+        <div class="tile-overlay">
+          <span class="tile-tag">Game / Code — BoomBang</span>
+        </div>
+      </a>
+
+      <a href="#" class="tile tile-wide" data-tags="game code">
+        <div class="img-slot" style="background-color:#0b3d91;background-image:url('img/clubpenguin.jpg')"></div>
+        <div class="tile-overlay">
+          <span class="tile-tag">Game / Code — Club Penguin CPPS</span>
+        </div>
+      </a>
+
+      <a href="flappy.html" class="tile tile-tall" data-tags="game">
+        <div class="img-slot" style="background-color:#87ceeb;background-image:url('img/flappy.jpg')"></div>
+        <div class="tile-overlay">
+          <span class="tile-tag">Game — Flappy Bird</span>
+        </div>
+      </a>
+
+      <a href="photobooth.html" class="tile tile-wide" data-tags="code visual">
+        <div class="img-slot" style="background-color:#ffffff;background-image:url('img/photobooth.jpg')"></div>
+        <div class="tile-overlay">
+          <span class="tile-tag">Code / Visual — Photo Booth</span>
+        </div>
+      </a>
+
+      <a href="works/openhexagon.html" class="tile tile-wide" data-tags="game">
+        <div class="img-slot" style="background-color:#0a2530;background-image:url('img/hexagon.jpg')"></div>
+        <div class="tile-overlay">
+          <span class="tile-tag">Game — Super Hexagon</span>
+        </div>
+      </a>
+
+    </div>
+    <div class="filter-strip">
+      <button class="ftag active" data-f="all">&#10022;</button>
+      <button class="ftag" data-f="ai">AI</button>
+      <button class="ftag" data-f="code">Code</button>
+      <button class="ftag" data-f="game">Game</button>
+      <button class="ftag" data-f="visual">Visual</button>
+    </div>
+  </section>
+
+  <!-- ABOUT: image + minimal text -->
+  <section id="about">
+    <div class="about-grid">
+      <div class="about-image">
+        <div class="img-slot" style="background-image:url('img/about.jpg')"><span class="slot-hint">img/about.jpg</span></div>
+      </div>
+      <div class="about-image">
+        <div class="img-slot" style="background-image:url('img/about-2.jpg')"><span class="slot-hint">img/about-2.jpg</span></div>
+      </div>
+      <div class="about-text">
+        <p>Cosas que se hacen con maquinas y sin ellas.</p>
+        <p class="muted">Codigo, imagenes, juegos, ruido.</p>
+      </div>
+      <div class="about-image">
+        <div class="img-slot" style="background-image:url('img/about-3.jpg')"><span class="slot-hint">img/about-3.jpg</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOG: visual cards -->
+  <section id="blog">
+    <div class="section-whisper"><span>&#10022;</span> Notes <span>&#10022;</span></div>
+    <div class="blog-scroll">
+      <article class="blog-card">
+        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-1.jpg')"><span class="slot-hint">img/blog-1.jpg</span></div></div>
+        <div class="blog-meta">
+          <span class="blog-date">15.03</span>
+          <h3>Cuando la maquina suena</h3>
+        </div>
+      </article>
+      <article class="blog-card">
+        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-2.jpg')"><span class="slot-hint">img/blog-2.jpg</span></div></div>
+        <div class="blog-meta">
+          <span class="blog-date">02.03</span>
+          <h3>Esculpir con algoritmos</h3>
+        </div>
+      </article>
+      <article class="blog-card">
+        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-3.jpg')"><span class="slot-hint">img/blog-3.jpg</span></div></div>
+        <div class="blog-meta">
+          <span class="blog-date">18.02</span>
+          <h3>Collage en la era digital</h3>
+        </div>
+      </article>
+      <article class="blog-card">
+        <div class="blog-img"><div class="img-slot" style="background-image:url('img/blog-4.jpg')"><span class="slot-hint">img/blog-4.jpg</span></div></div>
+        <div class="blog-meta">
+          <span class="blog-date">04.02</span>
+          <h3>Ruido y senal</h3>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SERVICES: minimal, cryptic -->
+  <section id="services">
+    <div class="services-strip">
+      <div class="service-item">
+        <span class="service-glyph">&#9681;</span>
+        <span class="service-name">Imagen generativa</span>
+      </div>
+      <div class="service-item">
+        <span class="service-glyph">&#9672;</span>
+        <span class="service-name">Juegos & interactivos</span>
+      </div>
+      <div class="service-item">
+        <span class="service-glyph">&#10070;</span>
+        <span class="service-name">Desarrollo creativo</span>
+      </div>
+      <div class="service-item">
+        <span class="service-glyph">&#10048;</span>
+        <span class="service-name">Consultoria IA</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT: hermetic -->
+  <section id="contact">
+    <div class="contact-core">
+      <p class="contact-line">&#10022;</p>
+      <p class="contact-line"><a href="mailto:tu@email.com">Mail</a></p>
+      <p class="contact-line"><a href="https://github.com/DAVhg" target="_blank" rel="noopener">GitHub</a></p>
+      <p class="contact-line"><a href="https://soundcloud.com/32888444d" target="_blank" rel="noopener">SoundCloud</a></p>
+      <p class="contact-line"><a href="https://es.pinterest.com/32888444dd/" target="_blank" rel="noopener">Pinterest</a></p>
+      <p class="contact-line">&#10022;</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>32888444d</span>
+  </footer>
+
+  <script src="js/banner.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
