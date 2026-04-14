@@ -311,7 +311,7 @@ input[type='text'].error {
         padding-left: 10px;
         padding-right: 10px; }
       .choose-container .choose-container-box ul li:hover {
-        color: #fff;
+        color: #000;
         background-color: #000; }
     .choose-container .choose-container-box.closed ul {
       display: none; }
@@ -940,7 +940,7 @@ p {
     background-color: transparent;
     vertical-align: middle; }
     .item-size-form-container input[type='text'].error {
-      color: #fff;
+      color: #000;
       background-color: #000; }
   .item-size-form-container p {
     font-size: 14px; }
